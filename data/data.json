@@ -1,0 +1,97 @@
+{
+    "header": {
+        "name": "Manas Ranjan Das",
+        "contact": [
+            { "text": "+91-82497-09981", "link": null },
+            { "text": "dasmanasranjan2005@gmail.com", "link": "mailto:dasmanasranjan2005@gmail.com" },
+            { "text": "linkedin.com/in/manas-r-das", "link": "https://linkedin.com/in/manas-r-das" },
+            { "text": "github.com/AlienMinus", "link": "https://github.com/AlienMinus" },
+            { "text": "manas-ranjan-das.vercel.app", "link": "https://manas-ranjan-das.vercel.app" }
+        ],
+        "location": "Cuttack, Odisha, India"
+    },
+    "summary": "Electrical and Computer Engineering student & Researcher with 3+ years of experience in <strong>Full-Stack Development, AI/ML, and IoT systems</strong>. Specialized in building intelligent hardware-software interfaces and scalable cloud architectures. Proven track record in optimizing high-complexity codebases and conducting deep-tech research in computer vision, energy harvesting, and microgrid stability.",
+    "education": [
+        {
+            "institution": "Biju Patnaik University of Technology, Rourkela",
+            "period": "2023 — 2027",
+            "degree": "Bachelor of Technology in Electrical & Computer Engineering",
+            "score": "CGPA: 8.82 / 10.00"
+        },
+        {
+            "institution": "Jatiya Kabi Bira Kishore Das Govt. HSS",
+            "period": "2021 — 2023",
+            "degree": "Higher Secondary Science (CHSE Odisha)",
+            "score": "87.5%"
+        }
+    ],
+    "experience": [
+        {
+            "role": "AI Engineering Intern | Odisha Computer Application Centre (OCAC)",
+            "period": "May 2025 — July 2025",
+            "details": [
+                "Developed <strong>YOLO Deep Learning based PCB Component Detector</strong> and OpenCV gesture recognition systems (Writing Pad, On-Screen Keyboard).",
+                "Engineered a <strong>Retail-Sales-Forecast Model</strong> using ML with a frontend dashboard for real-time inventory prediction.",
+                "Built browser extensions for Email-Spam filtering and text-based Emotion Detection using ML pipelines."
+            ]
+        },
+        {
+            "role": "Research Intern | HBCSE, Tata Institute of Fundamental Research (TIFR)",
+            "period": "June 2024 — Present",
+            "details": [
+                "Developing educational research-informed resources for high school physics in a <strong>two-year research tenure</strong>.",
+                "Designing <strong>interactive simulations</strong> to visualize abstract physics concepts for nationwide distribution."
+            ]
+        },
+        {
+            "role": "Software Development & Solution Architecture Intern | Accenture / AWS",
+            "period": "Dec 2024",
+            "details": [
+                "<strong>Optimized Sims 4 legacy codebase</strong> using advanced data structures, reducing memory overhead by <strong>20%</strong>.",
+                "Designed scalable hosting architecture on <strong>AWS Elastic Beanstalk</strong>, reducing response latency by 30% for high-growth clients."
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "title": "AI-Powered PCB Component Detector",
+            "tech": "Python, OpenCV, YOLOv8",
+            "year": "2025",
+            "details": ["Engineered a deep learning-based recognition system for manufacturing QA; achieved high precision in real-time labeling and detection of small-form-factor PCB components using custom <strong>YOLO</strong> architectures."]
+        },
+        {
+            "title": "C-- Scripture Language",
+            "tech": "Python, React, Flask, C",
+            "year": "2026",
+            "details": ["Developed a browser-based <strong>Live Script Notebook</strong> for C programming, featuring a custom compilation pipeline that enables real-time execution and visualization of C code within a React frontend that basically provides output through V8 engine."]
+        },
+        {
+            "title": "Project Encome - \"ShineX\"",
+            "tech": "MERN Stack, Vercel, Render",
+            "year": "2025",
+            "details": ["Architected a full-stack E-Commerce platform for a utility brand using the <strong>MERN stack</strong>; integrated secure authentication, real-time inventory management, and a responsive UI/UX."]
+        },
+        {
+            "title": "Hybrid IoT Energy Harvesting System",
+            "tech": "Arduino, IoT, R&D",
+            "year": "2024",
+            "details": ["Designed an integrated node harvesting energy from <strong>Solar (60%), Piezo (30%), and RF (10%)</strong>; presented research at the IoT National Conclave."]
+        }
+    ],
+    "skills": [
+        { "category": "Languages", "items": "Python, C, C++, JavaScript (ES6+), SQL, R, PHP, Scratch" },
+        { "category": "Web/Dev", "items": "React, Node.js, Express, Flask, Django, MongoDB, Docker, Git/GitHub, Bootstrap" },
+        { "category": "AI/Data", "items": "TensorFlow, Scikit-Learn, YOLO, OpenCV, NLP, MATLAB, Advanced Excel" },
+        { "category": "Hardware/IoT", "items": "Arduino, Raspberry Pi, Embedded Systems, Power Electronics, TinkerCad, Robotics" }
+    ],
+    "achievements": [
+        { "label": "Membership", "description": "Member, Indian Society of Technical Education (ISTE) from 2024 - 2028." },
+        { "label": "BPUT Tech Carnival 2025", "description": "Secured <strong>State Level Silver Medal</strong> in Math Olympiad and <strong>Bronze Medal</strong> in Technical Quiz among 150+ top tech colleges." },
+        { "label": "Research Publication", "description": "Co-authored \"Optimizing fuzzy power system stabilizers...\" in <strong>Engineering Research Express</strong>." },
+        { "label": "NIUS 2024 Scholar", "description": "Selected as 1 of 71 nationwide for <strong>NIUS Physics Program at HBCSE-TIFR</strong>." },
+        { "label": "Social Entrepreneurship", "description": "CEO of Aerial.Vue (Student Start-up) and Co-Founder of InceptriX (AI/ML Solutions)." },
+        { "label": "Competition", "description": "Secured <strong>AIR 154,047</strong> in JEE Mains 2023 among 1 Million+ candidates." },
+        { "label": "Certifications", "description": "Adobe Certified Content Specialist, MBA (Germany), JUNO Mastered ChatGPT." },
+        { "label": "Leadership", "description": "Class Representative (ECE 23-27); Successfully Led 5 Teams for student-led innovation challenges, BPUT-Hackathon 2025." }
+    ]
+}

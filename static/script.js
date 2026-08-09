@@ -265,7 +265,7 @@ function renderProjects(data) {
     const itemsHtml = data.map(proj => `
         <div class="mb-2">
             <div class="item-header ${data.indexOf(proj) === data.length - 1 ? 'mb-0' : ''}">
-                <span>${proj.title} | <span class="font-normal italic">${proj.tech}</span></span>
+                <span>${proj.title} <br/><span class="font-normal italic">${proj.tech}</span></span>
                 <span>${proj.year}</span>
             </div>
             <ul>

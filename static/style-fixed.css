@@ -1,0 +1,407 @@
+body {
+    font-family: 'Noto Sans', sans-serif;
+    line-height: 1.35;
+    color: #1a1a1a;
+    /* Background handled by Tailwind classes in index.html */
+}
+
+
+/* =========================================================
+   RESUME PAGE — SCREEN VIEW
+   ========================================================= */
+
+.resume-page {
+    background: white;
+    width: 100%;
+    max-width: 210mm;
+    min-height: 297mm;
+    margin: 1.5rem auto;
+    padding: 10mm 15mm;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .resume-page {
+        padding: 5mm;
+        margin: 1rem auto;
+    }
+
+}
+
+
+/* =========================================================
+   PRINT / PDF
+   ========================================================= */
+
+/*
+ * IMPORTANT:
+ * The top margin is defined here so that EVERY printed page
+ * receives the same top spacing.
+ *
+ * Page layout:
+ *
+ *       7mm TOP
+ * ─────────────────────────
+ *       Resume content
+ * ─────────────────────────
+ *
+ * This works on page 1, page 2, page 3, etc.
+ */
+
+@page {
+    size: A4;
+
+    /* TOP | RIGHT | BOTTOM | LEFT */
+    margin: 7mm 0 7mm 0;
+}
+
+
+@media print {
+
+    /* =====================================================
+       GLOBAL PRINT RESET
+       ===================================================== */
+
+    html,
+    body {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        overflow: visible !important;
+
+        display: block !important;
+
+        background: #ffffff !important;
+    }
+
+
+    /* =====================================================
+       HIDE APPLICATION UI
+       ===================================================== */
+
+    aside,
+    #admin-view,
+    .no-print,
+    #sidebar-toggle,
+    #sidebar-overlay,
+    #delete-modal,
+    #toast-container {
+        display: none !important;
+    }
+
+
+    /* =====================================================
+       MAIN PRINT CONTAINER
+       ===================================================== */
+
+    main,
+    #resume-view {
+        width: 100% !important;
+
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        overflow: visible !important;
+
+        display: block !important;
+
+        position: static !important;
+    }
+
+
+    /* =====================================================
+       RESUME PAPER
+       ===================================================== */
+
+    .resume-page {
+
+        width: 100% !important;
+        max-width: none !important;
+
+        /*
+         * IMPORTANT:
+         * Do NOT set a fixed height here.
+         *
+         * The browser must be allowed to split the resume
+         * naturally across multiple A4 pages.
+         */
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+
+        /*
+         * No vertical margin/padding here.
+         *
+         * The 7mm top spacing is handled by @page,
+         * which automatically applies it to EVERY page.
+         */
+        margin: 0 !important;
+        padding: 0 10mm !important;
+
+        box-sizing: border-box !important;
+
+        overflow: visible !important;
+
+        box-shadow: none !important;
+
+        display: block !important;
+
+        flex-shrink: 1 !important;
+    }
+
+
+    /* =====================================================
+       REMOVE FIRST-PAGE-ONLY TOP PADDING
+       ===================================================== */
+
+    #header-section {
+        padding-top: 0 !important;
+        margin-top: 0 !important;
+    }
+
+
+    /* =====================================================
+       PAGE BREAK CONTROL
+       ===================================================== */
+
+    /*
+     * Try to keep an entire education entry together.
+     */
+    #education-section > div {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+
+    /*
+     * Try to keep an entire experience entry together.
+     */
+    #experience-section > div {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+
+    /*
+     * Try to keep an entire project together.
+     *
+     * This prevents situations such as:
+     *
+     * PAGE 1:
+     *   AI Interview Assistant
+     *   2 bullets
+     *
+     * PAGE 2:
+     *   remaining bullet
+     *
+     * whenever enough space exists to move the project.
+     */
+    #projects-section > div {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+
+    /*
+     * Keep section headings with the content below them.
+     */
+    h2 {
+        break-after: avoid;
+        page-break-after: avoid;
+
+        break-before: auto;
+        page-break-before: auto;
+    }
+
+
+    /*
+     * Prevent a heading from being the last element
+     * at the bottom of a page.
+     */
+    h2 + p,
+    h2 + div,
+    h2 + ul {
+        break-before: avoid;
+        page-break-before: avoid;
+    }
+
+
+    /* =====================================================
+       LINKS
+       ===================================================== */
+
+    a {
+        color: #000000 !important;
+        text-decoration: none !important;
+    }
+
+
+    /* =====================================================
+       PREVENT ACCIDENTAL CLIPPING
+       ===================================================== */
+
+    * {
+        max-height: none !important;
+    }
+
+}
+
+
+/* =========================================================
+   RESUME TYPOGRAPHY
+   ========================================================= */
+
+h1 {
+    letter-spacing: -0.05em;
+    margin-bottom: 2px;
+}
+
+
+h2 {
+    border-bottom: 1.5px solid #222;
+
+    padding-bottom: 1px;
+
+    margin-top: 10px;
+    margin-bottom: 5px;
+
+    text-transform: uppercase;
+
+    font-size: 0.95rem;
+    font-weight: 700;
+
+    color: #111;
+}
+
+
+/* =========================================================
+   ITEM HEADER
+   ========================================================= */
+
+.item-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    font-weight: 700;
+
+    font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   ITEM SUBHEADER
+   ========================================================= */
+
+.item-sub {
+    display: flex;
+
+    justify-content: space-between;
+
+    font-style: italic;
+
+    font-size: 0.8rem;
+
+    margin-bottom: 2px;
+}
+
+
+/* =========================================================
+   BULLET LIST
+   ========================================================= */
+
+.resume-page ul {
+    list-style-type: disc;
+
+    margin-left: 1.1rem;
+}
+
+
+.resume-page li {
+    font-size: 0.82rem;
+
+    margin-bottom: 1px;
+
+    text-align: justify;
+}
+
+
+/* =========================================================
+   SKILLS GRID
+   ========================================================= */
+
+.skills-grid {
+    display: grid;
+
+    grid-template-columns: auto 1fr;
+
+    gap: 2px 10px;
+
+    font-size: 0.82rem;
+}
+
+
+/* =========================================================
+   BOLD TEXT
+   ========================================================= */
+
+.bold {
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   LINKS — SCREEN
+   ========================================================= */
+
+a {
+    color: inherit;
+
+    text-decoration: none;
+}
+
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   SIDEBAR PROFILE STYLES
+   ========================================================= */
+
+.profile-item {
+    cursor: pointer;
+
+    transition: background-color 0.2s;
+}
+
+
+.profile-item:hover,
+.profile-item.active {
+    background-color: #374151;
+}
+
+
+.profile-avatar {
+    background: linear-gradient(
+        135deg,
+        #3b82f6,
+        #8b5cf6
+    );
+}

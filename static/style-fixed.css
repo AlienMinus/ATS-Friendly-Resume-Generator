@@ -405,3 +405,17 @@ a:hover {
         #8b5cf6
     );
 }
+/* Public view links shown beside project, experience and certification names. */
+.public-view-link {
+    color: #003a8c !important;
+    font-weight: 700 !important;
+    font-size: 0.78em;
+    text-decoration: none !important;
+    margin-left: 0.35rem;
+    white-space: nowrap;
+}
+
+.public-view-link:hover {
+    color: #001f5c !important;
+    text-decoration: underline !important;
+}

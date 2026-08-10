@@ -2,10 +2,22 @@
     "header": {
         "name": "Sarah Jenkins",
         "contact": [
-            { "text": "415-555-0123", "link": null },
-            { "text": "sarah.jenkins@example.com", "link": "mailto:sarah.jenkins@example.com" },
-            { "text": "linkedin.com/in/sarahjenkins", "link": "https://linkedin.com" },
-            { "text": "sarah-pm.io", "link": "https://example.com" }
+            {
+                "text": "415-555-0123",
+                "link": null
+            },
+            {
+                "text": "sarah.jenkins@example.com",
+                "link": "mailto:sarah.jenkins@example.com"
+            },
+            {
+                "text": "linkedin.com/in/sarahjenkins",
+                "link": "https://linkedin.com"
+            },
+            {
+                "text": "sarah-pm.io",
+                "link": "https://example.com"
+            }
         ],
         "location": "San Francisco, CA"
     },
@@ -26,7 +38,8 @@
                 "Led the development of the <strong>Global Payouts Dashboard</strong>, reducing merchant onboarding time by 40%.",
                 "Managed a team of 12 engineers and designers, implementing weekly sprint cycles that increased feature velocity by 25%.",
                 "Conducted user research with 50+ enterprise clients to define the roadmap for Q3-Q4 2024."
-            ]
+            ],
+            "link": ""
         },
         {
             "role": "Product Manager | Robinhood",
@@ -35,7 +48,8 @@
                 "Spearheaded the <strong>Crypto Wallet</strong> integration, acquiring 500k waitlist users in the first week.",
                 "Collaborated with legal and compliance teams to ensure regulatory adherence across 50 US states.",
                 "Optimized the mobile onboarding flow, increasing conversion rates by 15%."
-            ]
+            ],
+            "link": ""
         }
     ],
     "projects": [
@@ -43,23 +57,49 @@
             "title": "AgileFlow SaaS",
             "tech": "React, Node.js, AWS",
             "year": "2023",
-            "details": ["Built a B2B project management tool for remote teams; scaled to 10,000 active users within 6 months of launch."]
+            "details": [
+                "Built a B2B project management tool for remote teams; scaled to 10,000 active users within 6 months of launch."
+            ],
+            "link": ""
         },
         {
             "title": "MarketPredict AI",
             "tech": "Python, Scikit-Learn",
             "year": "2022",
-            "details": ["Developed a stock trend prediction model using sentiment analysis on financial news headlines with 78% directional accuracy."]
+            "details": [
+                "Developed a stock trend prediction model using sentiment analysis on financial news headlines with 78% directional accuracy."
+            ],
+            "link": ""
         }
     ],
     "skills": [
-        { "category": "Product", "items": "Roadmapping, A/B Testing, Jira, Asana, Figma, SQL, Tableau" },
-        { "category": "Technical", "items": "Python, JavaScript, HTML/CSS, REST APIs, Git" },
-        { "category": "Soft Skills", "items": "Leadership, Stakeholder Management, Public Speaking, Negotiation" }
+        {
+            "category": "Product",
+            "items": "Roadmapping, A/B Testing, Jira, Asana, Figma, SQL, Tableau"
+        },
+        {
+            "category": "Technical",
+            "items": "Python, JavaScript, HTML/CSS, REST APIs, Git"
+        },
+        {
+            "category": "Soft Skills",
+            "items": "Leadership, Stakeholder Management, Public Speaking, Negotiation"
+        }
     ],
     "achievements": [
-        { "label": "Speaker", "description": "Keynote speaker at ProductCon 2023 on 'Scaling FinTech Products'." },
-        { "label": "Award", "description": "Recipient of the 'Innovator of the Year' award at Stripe (2022)." },
-        { "label": "Certification", "description": "Certified Scrum Product Owner (CSPO) and PMP Certified." }
-    ]
+        {
+            "label": "Speaker",
+            "description": "Keynote speaker at ProductCon 2023 on 'Scaling FinTech Products'."
+        },
+        {
+            "label": "Award",
+            "description": "Recipient of the 'Innovator of the Year' award at Stripe (2022)."
+        },
+        {
+            "label": "Certification",
+            "description": "Certified Scrum Product Owner (CSPO) and PMP Certified."
+        }
+    ],
+    "certifications": [],
+    "customSections": []
 }

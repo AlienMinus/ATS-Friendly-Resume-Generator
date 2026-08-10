@@ -180,40 +180,44 @@ function loadProfile(data) {
 }
 
 function renderResume(data) {
-    document.title = `ResuManager | ${data.header.name}`;
-    updateFavicon(data.header.name);
-    renderHeader(data.header);
-    renderSummary(data.summary);
-    renderEducation(data.education);
-    renderExperience(data.experience);
-    renderProjects(data.projects);
+    document.title = `ResuManager | ${data.header?.name || 'Resume'}`;
+    updateFavicon(data.header?.name || 'Resume');
+
+    // Backward-compatible defaults for profiles created before the new sections.
+    data.skills = Array.isArray(data.skills) ? data.skills : [];
+    data.certifications = Array.isArray(data.certifications) ? data.certifications : [];
+    data.customSections = Array.isArray(data.customSections) ? data.customSections : [];
+
+    renderHeader(data.header || { name: '', location: '', contact: [] });
+    renderSummary(data.summary || '');
+    renderEducation(data.education || []);
     renderSkills(data.skills);
-    renderAchievements(data.achievements);
+    renderExperience(data.experience || []);
+    renderProjects(data.projects || []);
+    renderCertifications(data.certifications);
+    renderAchievements(data.achievements || []);
+    renderCustomSections(data.customSections);
 }
 
 function renderHeader(data) {
     const container = document.getElementById('header-section');
-    
-    const contactHtml = data.contact.map((item, index) => {
-        let html = '';
-        if (item.link) {
-            html = `<a href="${item.link}">${item.text}</a>`;
-        } else {
-            html = `<span>${item.text}</span>`;
-        }
-        // Add separator if not the last item
-        if (index < data.contact.length - 1) {
-            html += `<span>|</span>`;
-        }
+    const contact = Array.isArray(data.contact) ? data.contact : [];
+
+    const contactHtml = contact.map((item, index) => {
+        let html = item.link
+            ? `<a href="${item.link}">${item.text || ''}</a>`
+            : `<span>${item.text || ''}</span>`;
+
+        if (index < contact.length - 1) html += `<span>|</span>`;
         return html;
     }).join('\n');
 
     container.innerHTML = `
-        <h1 class="text-3xl font-bold uppercase">${data.name}</h1>
+        <h1 class="text-3xl font-bold uppercase">${data.name || ''}</h1>
         <div class="text-[0.82rem] flex justify-center flex-wrap gap-x-3 font-medium">
             ${contactHtml}
         </div>
-        <div class="text-[0.82rem] italic mt-0.5 text-gray-700">${data.location}</div>
+        <div class="text-[0.82rem] italic mt-0.5 text-gray-700">${data.location || ''}</div>
     `;
 }
 
@@ -221,26 +225,50 @@ function renderSummary(data) {
     const container = document.getElementById('summary-section');
     container.innerHTML = `
         <h2>Summary</h2>
-        <p class="text-[0.82rem] text-justify">${data}</p>
+        <p class="text-[0.82rem] text-justify">${data || ''}</p>
     `;
+}
+
+function renderPublicLink(link) {
+    if (!link) return '';
+    return ` <a class="public-view-link" href="${link}" target="_blank" rel="noopener noreferrer" aria-label="Open public link">LINK</a>`;
 }
 
 function renderEducation(data) {
     const container = document.getElementById('education-section');
-    const itemsHtml = data.map(edu => `
-        <div class="${data.indexOf(edu) !== data.length - 1 ? 'mb-2' : ''}">
+    const itemsHtml = data.map((edu, index) => `
+        <div class="${index !== data.length - 1 ? 'mb-2' : ''}">
             <div class="item-header">
-                <span>${edu.institution}</span>
-                <span>${edu.period}</span>
+                <span>${edu.institution || ''}</span>
+                <span>${edu.period || ''}</span>
             </div>
             <div class="item-sub">
-                <span>${edu.degree}</span>
-                <span>${edu.score}</span>
+                <span>${edu.degree || ''}</span>
+                <span>${edu.score || ''}</span>
             </div>
         </div>
     `).join('');
-    
+
     container.innerHTML = `<h2>Education</h2>${itemsHtml}`;
+}
+
+function renderSkills(data) {
+    const container = document.getElementById('skills-section');
+
+    if (!data.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const itemsHtml = data.map(skill => `
+        <span class="bold">${skill.category || ''}:</span>
+        <span>${skill.items || ''}</span>
+    `).join('\n');
+
+    container.innerHTML = `
+        <h2>Technical Skills</h2>
+        <div class="skills-grid">${itemsHtml}</div>
+    `;
 }
 
 function renderExperience(data) {
@@ -248,11 +276,11 @@ function renderExperience(data) {
     const itemsHtml = data.map(exp => `
         <div class="experience-item mb-2">
             <div class="item-header">
-                <span>${exp.role}</span>
-                <span>${exp.period}</span>
+                <span>${exp.role || ''}${renderPublicLink(exp.link)}</span>
+                <span>${exp.period || ''}</span>
             </div>
             <ul>
-                ${exp.details.map(detail => `<li>${detail}</li>`).join('')}
+                ${(Array.isArray(exp.details) ? exp.details : []).map(detail => `<li>${detail}</li>`).join('')}
             </ul>
         </div>
     `).join('');
@@ -262,68 +290,104 @@ function renderExperience(data) {
 
 function renderProjects(data) {
     const container = document.getElementById('projects-section');
-    const itemsHtml = data.map(proj => `
+
+    if (!data.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const itemsHtml = data.map((proj, index) => `
         <div class="mb-2">
-            <div class="item-header ${data.indexOf(proj) === data.length - 1 ? 'mb-0' : ''}">
-                <span>${proj.title} <br/><span class="font-normal italic">${proj.tech}</span></span>
-                <span>${proj.year}</span>
+            <div class="item-header ${index === data.length - 1 ? 'mb-0' : ''}">
+                <span>${proj.title || ''}${renderPublicLink(proj.link)} <br/><span class="font-normal italic">${proj.tech || ''}</span></span>
+                <span>${proj.year || ''}</span>
             </div>
             <ul>
-                ${proj.details.map(detail => `<li>${detail}</li>`).join('')}
+                ${(Array.isArray(proj.details) ? proj.details : []).map(detail => `<li>${detail}</li>`).join('')}
             </ul>
         </div>
     `).join('');
 
-    container.innerHTML = `<h2>Selected Projects</h2>${itemsHtml}`;
+    container.innerHTML = `<h2>Top Projects</h2>${itemsHtml}`;
 }
 
-function renderSkills(data) {
-    const container = document.getElementById('skills-section');
-    const itemsHtml = data.map(skill => `
-        <span class="bold">${skill.category}:</span> <span>${skill.items}</span>
-    `).join('\n');
+function renderCertifications(data) {
+    const container = document.getElementById('certifications-section');
 
-    container.innerHTML = `
-        <h2>Technical Skills</h2>
-        <div class="skills-grid">${itemsHtml}</div>
-    `;
+    if (!data.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const itemsHtml = data.map(cert => `
+        <li>
+            <strong>${cert.name || ''}${renderPublicLink(cert.link)}</strong>${cert.issuer ? ` — ${cert.issuer}` : ''}
+            ${cert.year ? ` (${cert.year})` : ''}
+            ${cert.details ? `: ${cert.details}` : ''}
+        </li>
+    `).join('');
+
+    container.innerHTML = `<h2>Certifications</h2><ul>${itemsHtml}</ul>`;
 }
 
 function renderAchievements(data) {
     const container = document.getElementById('achievements-section');
-    const itemsHtml = data.map(item => `<li><strong>${item.label}:</strong> ${item.description}</li>`).join('');
+
+    if (!data.length) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const itemsHtml = data.map(item =>
+        `<li><strong>${item.label || ''}:</strong> ${item.description || ''}</li>`
+    ).join('');
+
     container.innerHTML = `<h2>Achievements & Leadership</h2><ul>${itemsHtml}</ul>`;
+}
+
+function renderCustomSections(data) {
+    const container = document.getElementById('custom-sections-container');
+    if (!container) return;
+
+    container.innerHTML = data
+        .filter(section => section && (section.title || (section.items || []).length))
+        .map(section => {
+            const items = Array.isArray(section.items) ? section.items : [];
+            return `
+                <section class="custom-resume-section">
+                    <h2>${section.title || 'Custom Section'}</h2>
+                    ${items.length
+                        ? `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`
+                        : ''}
+                </section>
+            `;
+        }).join('');
 }
 
 // --- ADMIN FUNCTIONS ---
 
 function buildAdminForm(data) {
     const form = document.getElementById('admin-form');
-    form.innerHTML = ''; // Clear
+    form.innerHTML = '';
 
-    // Toggle Delete Button visibility based on source
+    // The delete action is only available for profiles actually stored locally.
     const deleteBtn = document.getElementById('btn-delete-profile');
     if (deleteBtn) {
-        if (data._source === 'local') {
-            deleteBtn.classList.remove('hidden');
-        } else {
-            deleteBtn.classList.add('hidden');
-        }
+        deleteBtn.classList.toggle('hidden', data?._source !== 'local');
     }
 
     // 1. Header
     form.appendChild(createSectionTitle('Header Information'));
     const headerSet = createFieldset('header-group');
-    headerSet.appendChild(createInput('Full Name', data.header.name || '', 'header-name'));
-    headerSet.appendChild(createInput('Location', data.header.location || '', 'header-location'));
-    
-    // Contact (Array)
+    headerSet.appendChild(createInput('Full Name', data.header?.name || '', 'header-name'));
+    headerSet.appendChild(createInput('Location', data.header?.location || '', 'header-location'));
+
     const contactContainer = document.createElement('div');
     contactContainer.className = 'mt-4';
     contactContainer.innerHTML = '<label class="block text-sm font-bold text-gray-700 mb-2">Contact Links</label>';
     const contactList = document.createElement('div');
     contactList.id = 'contact-list';
-    (data.header.contact || []).forEach(c => contactList.appendChild(createContactItem(c)));
+    (data.header?.contact || []).forEach(c => contactList.appendChild(createContactItem(c)));
     contactContainer.appendChild(contactList);
     contactContainer.appendChild(createAddButton('Add Contact', () => contactList.appendChild(createContactItem({}))));
     headerSet.appendChild(contactContainer);
@@ -348,23 +412,7 @@ function buildAdminForm(data) {
     form.appendChild(eduContainer);
     form.appendChild(createAddButton('Add Education', () => eduContainer.appendChild(createEducationItem({}))));
 
-    // 4. Experience
-    form.appendChild(createSectionTitle('Work Experience'));
-    const expContainer = document.createElement('div');
-    expContainer.id = 'experience-list';
-    (data.experience || []).forEach(exp => expContainer.appendChild(createExperienceItem(exp)));
-    form.appendChild(expContainer);
-    form.appendChild(createAddButton('Add Experience', () => expContainer.appendChild(createExperienceItem({}))));
-
-    // 5. Projects
-    form.appendChild(createSectionTitle('Projects'));
-    const projContainer = document.createElement('div');
-    projContainer.id = 'projects-list';
-    (data.projects || []).forEach(proj => projContainer.appendChild(createProjectItem(proj)));
-    form.appendChild(projContainer);
-    form.appendChild(createAddButton('Add Project', () => projContainer.appendChild(createProjectItem({}))));
-
-    // 6. Skills
+    // 4. Skills — deliberately before Work Experience.
     form.appendChild(createSectionTitle('Skills'));
     const skillsContainer = document.createElement('div');
     skillsContainer.id = 'skills-list';
@@ -372,13 +420,53 @@ function buildAdminForm(data) {
     form.appendChild(skillsContainer);
     form.appendChild(createAddButton('Add Skill Category', () => skillsContainer.appendChild(createSkillItem({}))));
 
-    // 7. Achievements
+    // 5. Work Experience
+    form.appendChild(createSectionTitle('Work Experience'));
+    const expContainer = document.createElement('div');
+    expContainer.id = 'experience-list';
+    (data.experience || []).forEach(exp => expContainer.appendChild(createExperienceItem(exp)));
+    form.appendChild(expContainer);
+    form.appendChild(createAddButton('Add Experience', () => expContainer.appendChild(createExperienceItem({}))));
+
+    // 6. Top Projects
+    form.appendChild(createSectionTitle('Top Projects'));
+    const projContainer = document.createElement('div');
+    projContainer.id = 'projects-list';
+    (data.projects || []).forEach(proj => projContainer.appendChild(createProjectItem(proj)));
+    form.appendChild(projContainer);
+    form.appendChild(createAddButton('Add Project', () => projContainer.appendChild(createProjectItem({}))));
+
+    // 7. Certifications — before Achievements.
+    form.appendChild(createSectionTitle('Certifications'));
+    const certContainer = document.createElement('div');
+    certContainer.id = 'certifications-list';
+    (data.certifications || []).forEach(cert => certContainer.appendChild(createCertificationItem(cert)));
+    form.appendChild(certContainer);
+    form.appendChild(createAddButton('Add Certification', () => certContainer.appendChild(createCertificationItem({}))));
+
+    // 8. Achievements
     form.appendChild(createSectionTitle('Achievements'));
     const achieveContainer = document.createElement('div');
     achieveContainer.id = 'achievements-list';
     (data.achievements || []).forEach(a => achieveContainer.appendChild(createAchievementItem(a)));
     form.appendChild(achieveContainer);
     form.appendChild(createAddButton('Add Achievement', () => achieveContainer.appendChild(createAchievementItem({}))));
+
+    // 9. Custom Sections
+    form.appendChild(createSectionTitle('Custom Sections'));
+    const customContainer = document.createElement('div');
+    customContainer.id = 'custom-sections-list';
+
+    (data.customSections || []).forEach(section => {
+        customContainer.appendChild(createCustomSectionItem(section));
+    });
+
+    form.appendChild(customContainer);
+    form.appendChild(createAddButton('Add New Custom Section', () => {
+        const section = createCustomSectionItem({ title: '', items: [] });
+        customContainer.appendChild(section);
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }));
 }
 
 // --- FORM BUILDER HELPERS ---
@@ -457,6 +545,7 @@ function createExperienceItem(data) {
     div.querySelector('.absolute').appendChild(createRemoveButton(() => div.remove()));
 
     div.appendChild(createInput('Role', data.role, 'exp-role'));
+    div.appendChild(createInput('Public View Link', data.link || '', 'exp-link', 'https://...'));
     div.appendChild(createInput('Period', data.period, 'exp-period'));
     
     // Details List
@@ -479,6 +568,7 @@ function createProjectItem(data) {
     div.querySelector('.absolute').appendChild(createRemoveButton(() => div.remove()));
 
     div.appendChild(createInput('Title', data.title, 'proj-title'));
+    div.appendChild(createInput('Public View Link', data.link || '', 'proj-link', 'https://...'));
     div.appendChild(createInput('Tech Stack', data.tech, 'proj-tech'));
     div.appendChild(createInput('Year', data.year, 'proj-year'));
 
@@ -521,6 +611,50 @@ function createSkillItem(data) {
     return div;
 }
 
+function createCertificationItem(data) {
+    const div = createFieldset('mb-4 certification-item relative');
+    div.innerHTML = '<div class="absolute top-2 right-2"></div>';
+    div.querySelector('.absolute').appendChild(createRemoveButton(() => div.remove()));
+
+    div.appendChild(createInput('Certification Name', data.name || '', 'cert-name'));
+    div.appendChild(createInput('Public View Link', data.link || '', 'cert-link', 'https://...'));
+    div.appendChild(createInput('Issuing Organization', data.issuer || '', 'cert-issuer'));
+    div.appendChild(createInput('Year', data.year || '', 'cert-year'));
+    div.appendChild(createInput('Details (Optional)', data.details || '', 'cert-details'));
+
+    return div;
+}
+
+function createCustomSectionItem(data) {
+    const div = createFieldset('mb-4 custom-section-item relative');
+    div.innerHTML = '<div class="absolute top-2 right-2"></div>';
+    div.querySelector('.absolute').appendChild(createRemoveButton(() => div.remove()));
+
+    div.appendChild(createInput(
+        'Section Title',
+        data.title || '',
+        'custom-title',
+        'e.g. Research Interests, Publications, Volunteer Experience'
+    ));
+
+    const itemsContainer = document.createElement('div');
+    itemsContainer.className = 'mt-2 pl-4 border-l-2 border-gray-300';
+    itemsContainer.innerHTML = '<label class="text-xs font-bold uppercase text-gray-500">Items</label>';
+
+    const list = document.createElement('div');
+    list.className = 'custom-items-list';
+
+    (data.items || []).forEach(item => list.appendChild(createDetailItem(item)));
+
+    itemsContainer.appendChild(list);
+    itemsContainer.appendChild(
+        createAddButton('Add Item', () => list.appendChild(createDetailItem('')))
+    );
+
+    div.appendChild(itemsContainer);
+    return div;
+}
+
 function createAchievementItem(data) {
     const div = createFieldset('mb-2 achievement-item flex gap-4 items-end');
     
@@ -546,7 +680,9 @@ function handleNewProfile() {
         experience: [],
         projects: [],
         skills: [],
-        achievements: []
+        certifications: [],
+        achievements: [],
+        customSections: []
     };
     
     currentData = emptyData;
@@ -616,13 +752,28 @@ function handleDeleteProfile() {
 }
 
 function confirmDeleteProfile() {
-    const profiles = getLocalProfiles();
-    const newProfiles = profiles.filter(p => p.id !== currentData.id);
-    localStorage.setItem('resume_profiles', JSON.stringify(newProfiles));
+    // Never call localStorage.clear(): other application data must remain untouched.
+    if (!currentData || currentData._source !== 'local' || !currentData.id) {
+        document.getElementById('delete-modal')?.classList.add('hidden');
+        return;
+    }
 
-    document.getElementById('delete-modal').classList.add('hidden');
+    const profiles = getLocalProfiles();
+    const exists = profiles.some(profile => String(profile.id) === String(currentData.id));
+
+    if (exists) {
+        const newProfiles = profiles.filter(
+            profile => String(profile.id) !== String(currentData.id)
+        );
+
+        // Keep the storage key intact even when this was the last profile.
+        localStorage.setItem('resume_profiles', JSON.stringify(newProfiles));
+        showToast('Profile deleted. Other local data was preserved.');
+    }
+
+    document.getElementById('delete-modal')?.classList.add('hidden');
     currentData = null;
-    refreshProfileList(true); // Reload and select first available
+    refreshProfileList(true);
     switchView('resume');
 }
 
@@ -641,21 +792,23 @@ function showToast(message) {
 }
 
 function getFormDataFromDOM() {
-    // Scrape the DOM to rebuild the JSON object
+    // Scrape the DOM to rebuild the JSON object.
     const getVal = (parent, selector) => parent.querySelector(selector)?.value || '';
-    const getList = (parent, selector, mapFn) => Array.from(parent.querySelectorAll(selector)).map(mapFn);
+    const getList = (parent, selector, mapFn) =>
+        parent ? Array.from(parent.querySelectorAll(selector)).map(mapFn) : [];
 
     return {
         header: {
-            name: document.querySelector('input[name="header-name"]').value,
-            location: document.querySelector('input[name="header-location"]').value,
+            name: document.querySelector('input[name="header-name"]')?.value || '',
+            location: document.querySelector('input[name="header-location"]')?.value || '',
             contact: getList(document.getElementById('contact-list'), '.contact-item', el => ({
-                text: el.querySelectorAll('input')[0].value,
-                link: el.querySelectorAll('input')[1].value || null
+                text: el.querySelectorAll('input')[0]?.value || '',
+                link: el.querySelectorAll('input')[1]?.value || null
             }))
         },
-        summary: document.getElementById('input-summary').value,
-        
+
+        summary: document.getElementById('input-summary')?.value || '',
+
         education: getList(document.getElementById('education-list'), '.education-item', el => ({
             institution: getVal(el, 'input[name="edu-inst"]'),
             period: getVal(el, 'input[name="edu-period"]'),
@@ -663,28 +816,52 @@ function getFormDataFromDOM() {
             score: getVal(el, 'input[name="edu-score"]')
         })),
 
+        // Skills intentionally precede experience in the saved data as well.
+        skills: getList(document.getElementById('skills-list'), '.skill-item', el => ({
+            category: getVal(el, 'input[name="skill-cat"]'),
+            items: getVal(el, 'input[name="skill-items"]')
+        })),
+
         experience: getList(document.getElementById('experience-list'), '.experience-item', el => ({
             role: getVal(el, 'input[name="exp-role"]'),
+            link: getVal(el, 'input[name="exp-link"]'),
             period: getVal(el, 'input[name="exp-period"]'),
             details: getList(el, '.exp-details-list .detail-item input', i => i.value)
         })),
 
         projects: getList(document.getElementById('projects-list'), '.project-item', el => ({
             title: getVal(el, 'input[name="proj-title"]'),
+            link: getVal(el, 'input[name="proj-link"]'),
             tech: getVal(el, 'input[name="proj-tech"]'),
             year: getVal(el, 'input[name="proj-year"]'),
             details: getList(el, '.proj-details-list .detail-item input', i => i.value)
         })),
 
-        skills: getList(document.getElementById('skills-list'), '.skill-item', el => ({
-            category: getVal(el, 'input[name="skill-cat"]'),
-            items: getVal(el, 'input[name="skill-items"]')
-        })),
+        certifications: getList(
+            document.getElementById('certifications-list'),
+            '.certification-item',
+            el => ({
+                name: getVal(el, 'input[name="cert-name"]'),
+                link: getVal(el, 'input[name="cert-link"]'),
+                issuer: getVal(el, 'input[name="cert-issuer"]'),
+                year: getVal(el, 'input[name="cert-year"]'),
+                details: getVal(el, 'input[name="cert-details"]')
+            })
+        ),
 
         achievements: getList(document.getElementById('achievements-list'), '.achievement-item', el => ({
             label: getVal(el, 'input[name="achieve-label"]'),
             description: getVal(el, 'input[name="achieve-desc"]')
-        }))
+        })),
+
+        customSections: getList(
+            document.getElementById('custom-sections-list'),
+            '.custom-section-item',
+            el => ({
+                title: getVal(el, 'input[name="custom-title"]'),
+                items: getList(el, '.custom-items-list .detail-item input', i => i.value)
+            })
+        )
     };
 }
 

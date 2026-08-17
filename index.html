@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link id="dynamic-favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
     <link rel="stylesheet" href="static/style-fixed.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -54,7 +56,7 @@
         <div id="resume-view" class="min-h-full p-4 md:p-8 flex flex-col items-center pt-16 lg:pt-8">
             <div class="no-print w-full max-w-[210mm] flex justify-end mb-4">
                 <button id="print-btn" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition text-sm font-bold">
-                    <i class="fa-solid fa-print mr-2"></i> Print PDF
+                    <i class="fa-solid fa-download mr-2"></i> Download PDF
                 </button>
             </div>
 
@@ -100,6 +102,99 @@
         </div>
 
     </main>
+
+
+    <!-- PDF Download / Preview Modal -->
+    <div id="pdf-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 p-4 no-print">
+        <div class="bg-white w-full max-w-7xl h-[92vh] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-4 border-b bg-gray-50">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Download PDF</h2>
+                    <p class="text-xs text-gray-500">Adjust scale and margins while keeping the resume layout intact.</p>
+                </div>
+                <button id="pdf-close" class="text-gray-500 hover:text-gray-900 text-xl px-2" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[310px_1fr]">
+                <div class="border-r bg-white p-5 overflow-y-auto">
+                    <div class="space-y-5">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label for="pdf-scale" class="font-semibold text-sm">Scale</label>
+                                <span id="pdf-scale-value" class="text-sm font-bold text-blue-600">100%</span>
+                            </div>
+                            <input id="pdf-scale" type="range" min="70" max="100" step="1" value="100" class="w-full">
+                            <div class="flex justify-between text-[11px] text-gray-400"><span>70%</span><span>85%</span><span>100%</span></div>
+                        </div>
+
+                        <div>
+                            <label for="pdf-page-size" class="block font-semibold text-sm mb-2">Page size</label>
+                            <select id="pdf-page-size" class="w-full rounded-lg border px-3 py-2 text-sm">
+                                <option value="a4">A4</option>
+                                <option value="letter">Letter</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="font-semibold text-sm mb-2">Margins (mm)</div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="text-xs text-gray-600">Top<input id="pdf-margin-top" type="number" min="0" max="40" step="1" value="7" class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+                                <label class="text-xs text-gray-600">Right<input id="pdf-margin-right" type="number" min="0" max="40" step="1" value="10" class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+                                <label class="text-xs text-gray-600">Bottom<input id="pdf-margin-bottom" type="number" min="0" max="40" step="1" value="7" class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+                                <label class="text-xs text-gray-600">Left<input id="pdf-margin-left" type="number" min="0" max="40" step="1" value="10" class="mt-1 w-full rounded-lg border px-2 py-2 text-sm"></label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="pdf-break-mode" class="block font-semibold text-sm mb-2">Page breaks</label>
+                            <select id="pdf-break-mode" class="w-full rounded-lg border px-3 py-2 text-sm">
+                                <option value="auto">Automatic</option>
+                                <option value="custom">Custom section breaks</option>
+                            </select>
+                            <p class="mt-1 text-[11px] text-gray-500">Choose which resume sections should start on a new PDF page.</p>
+                        </div>
+
+                        <div id="pdf-custom-breaks" class="hidden rounded-lg border bg-gray-50 p-3">
+                            <div class="font-semibold text-xs text-gray-800 mb-2">Start new page before</div>
+                            <div class="space-y-2 text-xs text-gray-700">
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="summary-section"> Summary</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="education-section"> Education</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="skills-section"> Technical Skills</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="experience-section"> Work Experience</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="projects-section"> Top Projects</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="certifications-section"> Certifications</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="achievements-section"> Achievements & Leadership</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" class="pdf-break-section" value="custom-sections-container"> Custom Sections</label>
+                            </div>
+                        </div>
+
+                        <div class="rounded-lg bg-gray-50 border p-3 text-xs text-gray-600 space-y-1">
+                            <div class="font-semibold text-gray-800">Layout protection</div>
+                            <div>• Scale changes the final PDF size, not the text wrapping.</div>
+                            <div>• Margins are applied around the rendered resume.</div>
+                            <div>• Links are preserved as clickable PDF links.</div>
+                        </div>
+
+                        <button id="pdf-reset" type="button" class="w-full rounded-lg border px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Reset</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-200 min-h-0 flex flex-col">
+                    <div class="px-4 py-2 border-b bg-white text-xs text-gray-500 flex justify-between">
+                        <span>PDF Preview</span><span id="pdf-preview-status">Rendering…</span>
+                    </div>
+                    <div class="flex-1 min-h-0 p-3">
+                        <iframe id="pdf-preview" title="PDF preview" class="w-full h-full bg-gray-100 rounded-lg border"></iframe>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 px-5 py-4 border-t bg-gray-50">
+                <button id="pdf-cancel" class="px-4 py-2 rounded-lg border font-semibold text-sm hover:bg-white">Cancel</button>
+                <button id="pdf-download-final" class="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 disabled:opacity-50">
+                    <i class="fa-solid fa-download mr-2"></i> Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Delete Confirmation Modal -->
     <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">

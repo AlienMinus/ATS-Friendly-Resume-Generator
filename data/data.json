@@ -46,109 +46,6 @@
             "score": "86.33%"
         }
     ],
-    "experience": [
-        {
-            "role": "Cybersecurity Intern | Central Tool Room & Training Centre (CTTC)",
-            "period": "May 2026 - June 2026",
-            "details": [
-                "Gained hands-on experience across 5+ cybersecurity domains, including Cybersecurity, Ethical Hacking, Network Security & Risk Assessment.",
-                "Performed reconnaissance, vulnerability scanning and security analysis using Kali Linux and industry-standard cybersecurity tools.",
-                "Configured and simulated 4+ network-security mechanisms including Cisco networks, Port Security, VPNs, Firewalls and IDS/IPS using Cisco Packet Tracer and virtual lab environments."
-            ],
-            "link": ""
-        },
-        {
-            "role": "AI Engineering Intern | Odisha Computer Application Centre (OCAC)",
-            "period": "May 2025 — July 2025",
-            "details": [
-                "Developed 3+ AI/ML applications spanning computer vision, predictive analytics, and browser-based intelligent systems.",
-                "Built a <strong>YOLO Deep Learning based PCB Component Detector</strong> and 2+ OpenCV/MediaPipe gesture-driven applications, including a Writing Pad and On-Screen Keyboard.",
-                "Engineered a <strong>Retail-Sales-Forecast Model</strong> using 3+ ML models with a frontend dashboard for real-time inventory prediction.",
-                "Developed 2 ML-powered browser extensions for Email-Spam filtering and text-based Emotion Detection using ML pipelines."
-            ],
-            "link": ""
-        },
-        {
-            "role": "Software Development & Solution Architecture Intern | Accenture / AWS (Virtual)",
-            "period": "Dec 2024",
-            "details": [
-                "Conducted in-depth research into emerging technology trends, with a focus on <strong>DevOps</strong>, and analyzed <strong>Waterfall and Agile</strong> software development methodologies.",
-                "Designed custom algorithms using <strong>pseudocode</strong> and translated their logic into detailed flow diagrams for clear technical communication.",
-                "Debugged Python programs by identifying and resolving syntax and logical errors, with practical analysis of <strong>SDLC and STLC</strong> processes.",
-                "Designed a simple and scalable hosting architecture using <strong>AWS Elastic Beanstalk</strong> for a rapidly growing client experiencing slow response times.",
-                "Communicated the proposed AWS architecture in plain language, explaining system operation and cost considerations to the client."
-            ],
-            "link": ""
-        }
-    ],
-    "projects": [
-        {
-            "title": "Hyperion IDE — Code Security Analysis & Development Environment | ONGOING",
-            "tech": "ReactJS, Node.js, Express.js, MongoDB, Python NLP, Microservices, Agentic AI",
-            "year": "2026",
-            "details": [
-                "Developing an integrated development environment combining 5+ technology layers focused on AI-assisted code security analysis and intelligent developer workflows.",
-                "Designing a microservices-based architecture integrating MERN, Python-based NLP, and Agentic AI components for automated code analysis.",
-                "Working on intelligent security-oriented features for detecting and analyzing potential vulnerabilities in source code."
-            ],
-            "link": ""
-        },
-        {
-            "title": "AI Interview Assistant — AI-Powered Interview Simulation Browser Extension",
-            "tech": "JavaScript, Node.js, YOLO, Flask-Python-OpenCV, OCR, Browser Extension",
-            "year": "2026",
-            "details": [
-                "Developed a browser-based AI interview platform integrating 4+ AI/CV technologies—YOLO, OpenCV, OCR, and Node.js—for automated interview assistance.",
-                "Implemented resume text extraction + job-description processing to create a personalized interview context.",
-                "Built a 100-point interview scoring system with historical performance tracking and trend visualization."
-            ],
-            "link": ""
-        },
-        {
-            "title": "M.I.R.A — Multipurpose Intelligence for Research & Automation | ONGOING",
-            "tech": "MERN, LangChain, Agentic AI, NLP",
-            "year": "2026",
-            "details": [
-                "Developing an AI-powered research and automation assistant integrating 4 core technology layers: MERN, LangChain, Agentic AI, and NLP.",
-                "Designing conversational and task-oriented workflows for automated research assistance and intelligent information processing.",
-                "Building a scalable full-stack architecture with dedicated AI/NLP components."
-            ],
-            "link": ""
-        },
-        {
-            "title": "Arcturus Connexa — Professional Social Media Platform | ONGOING",
-            "tech": "MERN, MongoDB, Express.js, ReactJS, Node.js",
-            "year": "2026",
-            "details": [
-                "Developing a full-stack professional networking platform using the complete MERN stack.",
-                "Designed end-to-end client-server workflows with MongoDB, Express, React, and Node.js.",
-                "Implemented core social-networking workflows within a scalable full-stack architecture inspired by professional networking platforms."
-            ],
-            "link": ""
-        },
-        {
-            "title": "SAGAR2027 — International Conference Website",
-            "tech": "React, JavaScript, JSON, Hostinger, Vercel",
-            "year": "2026",
-            "details": [
-                "Developed and deployed a responsive website for the 1st International Conference on Soft Computing Applications in Smart Grid & Renewable Energy.",
-                "Built a structured React + JSON content architecture for managing conference information and program data.",
-                "Deployed the production platform for public access."
-            ],
-            "link": ""
-        },
-        {
-            "title": "Retail Sales Forecasting & Analytics",
-            "tech": "Python, Scikit-learn, XGBoost, Random Forest, Pandas, Streamlit, SHAP",
-            "year": "2025",
-            "details": [
-                "Developed an ML-based forecasting pipeline for historical retail-sales analysis and future demand prediction.",
-                "Implemented and compared 3+ regression models, including Linear Regression (Accuracy 8% : 4MB - Unhealthy), Random Forest(Accuracy 97% : 4GB - Heavy), and XGBoost(Accuracy 94% : 400MB - Optimal).",
-                "Integrated SHAP-based explainability and a Streamlit dashboard for interactive model analysis and forecasting."
-            ],
-            "link": ""
-        }
-    ],
     "skills": [
         {
             "category": "Languages",
@@ -163,6 +60,110 @@
             "items": "TensorFlow, Scikit-Learn, YOLO, OpenCV, NLP, Power BI, Cybersecurity, Edge Computing"
         }
     ],
+    "experience": [
+        {
+            "role": "Cybersecurity Intern | Central Tool Room & Training Centre (CTTC)",
+            "link": "https://media.licdn.com/dms/image/v2/D4D2DAQHh9rLyNFesuQ/profile-treasury-image-shrink_800_800/B4DZ_qwxycIIAI-/0/1786350083557?e=1787583600&v=beta&t=VV2Xgb8Ksu_AS-Ir2H3zfOB_tRhN7eyelMiJCUfbxPM",
+            "period": "May 2026 - June 2026",
+            "details": [
+                "Gained hands-on experience across 5+ cybersecurity domains, including Cybersecurity, Ethical Hacking, Network Security & Risk Assessment.",
+                "Performed reconnaissance, vulnerability scanning and security analysis using Kali Linux and industry-standard cybersecurity tools.",
+                "Configured and simulated 4+ network-security mechanisms including Cisco networks, Port Security, VPNs, Firewalls and IDS/IPS using Cisco Packet Tracer and virtual lab environments."
+            ]
+        },
+        {
+            "role": "AI Engineering Intern | Odisha Computer Application Centre (OCAC)",
+            "link": "https://media.licdn.com/dms/image/v2/D4D2DAQH8tTwrH4oh-Q/profile-treasury-image-shrink_800_800/B4DZ_qwX_eI4AI-/0/1786349977942?e=1787583600&v=beta&t=Y8ZYzQknil5qYoc10dosKZZFxSurN5qTwdOC6a0ffFM",
+            "period": "May 2025 — July 2025",
+            "details": [
+                "Developed 3+ AI/ML applications spanning computer vision, predictive analytics, and browser-based intelligent systems.",
+                "Built a <strong>YOLO Deep Learning based PCB Component Detector</strong> and 2+ OpenCV/MediaPipe gesture-driven applications, including a Writing Pad and On-Screen Keyboard.",
+                "Engineered a <strong>Retail-Sales-Forecast Model</strong> using 3+ ML models with a frontend dashboard for real-time inventory prediction.",
+                "Developed 2 ML-powered browser extensions for Email-Spam filtering and text-based Emotion Detection using ML pipelines."
+            ]
+        },
+        {
+            "role": "Software Development & Solution Architecture Intern | Accenture / AWS (Virtual)",
+            "link": "https://www.linkedin.com/in/manas-r-das/details/experience/",
+            "period": "Dec 2024",
+            "details": [
+                "Conducted in-depth research into emerging technology trends, with a focus on <strong>DevOps</strong>, and analyzed <strong>Waterfall and Agile</strong> software development methodologies.",
+                "Designed custom algorithms using <strong>pseudocode</strong> and translated their logic into detailed flow diagrams for clear technical communication.",
+                "Debugged Python programs by identifying and resolving syntax and logical errors, with practical analysis of <strong>SDLC and STLC</strong> processes.",
+                "Designed a simple and scalable hosting architecture using <strong>AWS Elastic Beanstalk</strong> for a rapidly growing client experiencing slow response times.",
+                "Communicated the proposed AWS architecture in plain language, explaining system operation and cost considerations to the client."
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "title": "Hyperion IDE — Code Security Analysis & Development Environment | ONGOING",
+            "link": "https://hyperion-ide.vercel.app/",
+            "tech": "ReactJS, Node.js, Express.js, MongoDB, Python NLP, Microservices, Agentic AI",
+            "year": "2026",
+            "details": [
+                "Developing an integrated development environment combining 5+ technology layers focused on AI-assisted code security analysis and intelligent developer workflows.",
+                "Designing a microservices-based architecture integrating MERN, Python-based NLP, and Agentic AI components for automated code analysis.",
+                "Working on intelligent security-oriented features for detecting and analyzing potential vulnerabilities in source code."
+            ]
+        },
+        {
+            "title": "AI Interview Assistant — AI-Powered Interview Simulation Browser Extension",
+            "link": "https://github.com/AlienMinus/AI_INTERVIEW_ASSISTANT",
+            "tech": "JavaScript, Node.js, YOLO, Flask-Python-OpenCV, OCR, Browser Extension",
+            "year": "2026",
+            "details": [
+                "Developed a browser-based AI interview platform integrating 4+ AI/CV technologies—YOLO, OpenCV, OCR, and Node.js—for automated interview assistance.",
+                "Implemented resume text extraction + job-description processing to create a personalized interview context.",
+                "Built a 100-point interview scoring system with historical performance tracking and trend visualization."
+            ]
+        },
+        {
+            "title": "M.I.R.A — Multipurpose Intelligence for Research & Automation | ONGOING",
+            "link": "https://m-i-r-a.vercel.app/",
+            "tech": "MERN, LangChain, Agentic AI, NLP",
+            "year": "2026",
+            "details": [
+                "Developing an AI-powered research and automation assistant integrating 4 core technology layers: MERN, LangChain, Agentic AI, and NLP.",
+                "Designing conversational and task-oriented workflows for automated research assistance and intelligent information processing.",
+                "Building a scalable full-stack architecture with dedicated AI/NLP components."
+            ]
+        },
+        {
+            "title": "Arcturus Connexa — Professional Social Media Platform | ONGOING",
+            "link": "https://arcturus-connexa.vercel.app/",
+            "tech": "MERN, MongoDB, Express.js, ReactJS, Node.js",
+            "year": "2026",
+            "details": [
+                "Developing a full-stack professional networking platform using the complete MERN stack.",
+                "Designed end-to-end client-server workflows with MongoDB, Express, React, and Node.js.",
+                "Implemented core social-networking workflows within a scalable full-stack architecture inspired by professional networking platforms."
+            ]
+        },
+        {
+            "title": "SAGAR2027 — International Conference Website",
+            "link": "https://www.sagar2027.com/",
+            "tech": "React, JavaScript, JSON, Hostinger, Vercel",
+            "year": "2026",
+            "details": [
+                "Developed and deployed a responsive website for the 1st International Conference on Soft Computing Applications in Smart Grid & Renewable Energy.",
+                "Built a structured React + JSON content architecture for managing conference information and program data.",
+                "Deployed the production platform for public access."
+            ]
+        },
+        {
+            "title": "Retail Sales Forecasting & Analytics",
+            "link": "https://retail-sales-forecast.streamlit.app/",
+            "tech": "Python, Scikit-learn, XGBoost, Random Forest, Pandas, Streamlit, SHAP",
+            "year": "2025",
+            "details": [
+                "Developed an ML-based forecasting pipeline for historical retail-sales analysis and future demand prediction.",
+                "Implemented and compared 3+ regression models, including Linear Regression (Accuracy 8% : 4MB - Unhealthy), Random Forest(Accuracy 97% : 4GB - Heavy), and XGBoost(Accuracy 94% : 400MB - Optimal).",
+                "Integrated SHAP-based explainability and a Streamlit dashboard for interactive model analysis and forecasting."
+            ]
+        }
+    ],
+    "certifications": [],
     "achievements": [
         {
             "label": "Membership",
@@ -178,17 +179,12 @@
         },
         {
             "label": "NIUS 2024 (June) Scholar",
-            "description": "Selected as 1 of 71 (21st Batch) nationwide for <strong>NIUS Physics Program at HBCSE-TIFR</strong>. Continued Project on <strong>'Physics Education Research Pedagogies Development' for 1.5 Years</strong>."
-        },
-        {
-            "label": "Competition",
-            "description": "Secured <strong>AIR 154,047</strong> in JEE Mains 2023 among 1 Million+ candidates."
+            "description": "Selected as 1 of 71 (21st Batch) nationwide for <strong>NIUS Physics Program at HBCSE-TIFR</strong>."
         },
         {
             "label": "Leadership",
-            "description": "Class Representative (ECE 23-27); Successfully Led 5 Teams for student-led innovation challenges, BPUT-Hackathon 2025."
+            "description": "Class Representative (ECE 23-27)."
         }
     ],
-    "certifications": [],
     "customSections": []
 }

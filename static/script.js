@@ -13,7 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupEventListeners() {
     // Print
-    document.getElementById('print-btn')?.addEventListener('click', () => window.print());
+    document.getElementById('print-btn')?.addEventListener('click', openPdfModal);
+    setupPdfModal();
 
     // Navigation
     document.getElementById('btn-show-resume')?.addEventListener('click', () => switchView('resume'));
@@ -876,6 +877,492 @@ function downloadJSON() {
     document.body.appendChild(downloadAnchorNode); // required for firefox
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
+}
+
+
+// =========================================================
+// PDF DOWNLOAD / PREVIEW
+// =========================================================
+let pdfState = { blob: null, url: null, rendering: false };
+
+function setupPdfModal() {
+    const modal = document.getElementById('pdf-modal');
+    if (!modal) return;
+
+    const controls = ['pdf-scale', 'pdf-page-size', 'pdf-margin-top', 'pdf-margin-right', 'pdf-margin-bottom', 'pdf-margin-left', 'pdf-break-mode'];
+    controls.forEach(id => {
+        const el = document.getElementById(id);
+        el?.addEventListener('input', () => {
+            if (id === 'pdf-scale') document.getElementById('pdf-scale-value').textContent = `${el.value}%`;
+            schedulePdfRender();
+        });
+        el?.addEventListener('change', schedulePdfRender);
+    });
+
+    document.getElementById('pdf-reset')?.addEventListener('click', () => {
+        document.getElementById('pdf-scale').value = 100;
+        document.getElementById('pdf-scale-value').textContent = '100%';
+        document.getElementById('pdf-page-size').value = 'a4';
+        document.getElementById('pdf-margin-top').value = 7;
+        document.getElementById('pdf-margin-right').value = 10;
+        document.getElementById('pdf-margin-bottom').value = 7;
+        document.getElementById('pdf-margin-left').value = 10;
+        document.getElementById('pdf-break-mode').value = 'auto';
+        document.querySelectorAll('.pdf-break-section').forEach(el => { el.checked = false; });
+        document.getElementById('pdf-custom-breaks')?.classList.add('hidden');
+        renderPdfPreview();
+    });
+
+    ['pdf-close', 'pdf-cancel'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', closePdfModal);
+    });
+    document.getElementById('pdf-download-final')?.addEventListener('click', downloadGeneratedPdf);
+
+    document.getElementById('pdf-break-mode')?.addEventListener('change', e => {
+        const custom = document.getElementById('pdf-custom-breaks');
+        custom?.classList.toggle('hidden', e.target.value !== 'custom');
+        schedulePdfRender();
+    });
+    document.querySelectorAll('.pdf-break-section').forEach(el => {
+        el.addEventListener('change', schedulePdfRender);
+    });
+
+    modal.addEventListener('click', e => { if (e.target === modal) closePdfModal(); });
+}
+
+function openPdfModal() {
+    const modal = document.getElementById('pdf-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    renderPdfPreview();
+}
+
+function closePdfModal() {
+    const modal = document.getElementById('pdf-modal');
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    if (pdfState.url) URL.revokeObjectURL(pdfState.url);
+    pdfState.url = null;
+    pdfState.blob = null;
+}
+
+let pdfRenderTimer = null;
+function schedulePdfRender() {
+    clearTimeout(pdfRenderTimer);
+    pdfRenderTimer = setTimeout(renderPdfPreview, 180);
+}
+
+function getPdfOptions() {
+    const page = document.getElementById('pdf-page-size')?.value || 'a4';
+    const sizes = {
+        a4: { w: 210, h: 297 },
+        letter: { w: 215.9, h: 279.4 }
+    };
+    const size = sizes[page];
+    return {
+        page,
+        pageW: size.w,
+        pageH: size.h,
+        scale: Number(document.getElementById('pdf-scale')?.value || 100) / 100,
+        top: Number(document.getElementById('pdf-margin-top')?.value || 0),
+        right: Number(document.getElementById('pdf-margin-right')?.value || 0),
+        bottom: Number(document.getElementById('pdf-margin-bottom')?.value || 0),
+        left: Number(document.getElementById('pdf-margin-left')?.value || 0),
+        breakMode: document.getElementById('pdf-break-mode')?.value || 'auto',
+        breakSections: Array.from(document.querySelectorAll('.pdf-break-section:checked')).map(el => el.value)
+    };
+}
+
+function trimCanvasBottom(sourceCanvas, threshold = 248, padding = 6) {
+    const width = sourceCanvas.width;
+    const height = sourceCanvas.height;
+    if (!width || !height) return sourceCanvas;
+
+    const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+    const pixels = ctx.getImageData(0, 0, width, height).data;
+
+    // Search upward for the last row containing meaningful non-white pixels.
+    // Sampling every 2nd pixel keeps this fast even at high render resolution.
+    let lastContentRow = -1;
+    for (let y = height - 1; y >= 0; y -= 2) {
+        const rowStart = y * width * 4;
+        let found = false;
+        for (let x = 0; x < width; x += 2) {
+            const i = rowStart + x * 4;
+            if (pixels[i] < threshold || pixels[i + 1] < threshold || pixels[i + 2] < threshold || pixels[i + 3] < 245) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            lastContentRow = y;
+            break;
+        }
+    }
+
+    if (lastContentRow < 0 || lastContentRow >= height - padding) return sourceCanvas;
+
+    const newHeight = Math.min(height, lastContentRow + padding + 1);
+    const out = document.createElement('canvas');
+    out.width = width;
+    out.height = newHeight;
+    const outCtx = out.getContext('2d');
+    outCtx.fillStyle = '#ffffff';
+    outCtx.fillRect(0, 0, width, newHeight);
+    outCtx.drawImage(sourceCanvas, 0, 0, width, newHeight, 0, 0, width, newHeight);
+    return out;
+}
+
+async function buildPdfBlob() {
+    if (!window.jspdf?.jsPDF || !window.html2canvas) {
+        throw new Error('PDF libraries failed to load. Check your internet connection.');
+    }
+
+    const opts = getPdfOptions();
+    if (opts.left + opts.right >= opts.pageW || opts.top + opts.bottom >= opts.pageH) {
+        throw new Error('Margins are too large for the selected page size.');
+    }
+
+    const source = document.querySelector('.resume-page');
+    if (!source) throw new Error('Resume page not found.');
+
+    // Clone the resume at its native A4 layout width. We never resize the clone
+    // with CSS transform or change its font size, so line wrapping stays stable.
+    const cloneHost = document.createElement('div');
+    cloneHost.style.cssText = `position:fixed;left:-100000px;top:0;width:210mm;background:#fff;z-index:-1;`;
+    const clone = source.cloneNode(true);
+    clone.style.cssText = `width:210mm;max-width:210mm;min-height:0;height:auto;margin:0;padding:0 10mm;box-sizing:border-box;background:#fff;box-shadow:none;overflow:visible;`;
+    cloneHost.appendChild(clone);
+    document.body.appendChild(cloneHost);
+
+    // Wait for the browser to finish layout before rasterizing.
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    const rect = clone.getBoundingClientRect();
+    const renderScale = 2.5;
+    const canvas = await html2canvas(clone, {
+        scale: renderScale,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
+        windowWidth: Math.ceil(rect.width),
+        windowHeight: Math.ceil(rect.height)
+    });
+
+    // Remove trailing blank canvas rows. html2canvas can include a tiny amount
+    // of extra height from CSS layout/rounding. Without trimming it, that tiny
+    // overflow can be interpreted as a complete third PDF page.
+    const trimmedCanvas = trimCanvasBottom(canvas);
+
+    // The resume print layout uses 10mm horizontal internal padding.
+    // Crop that padding out of the rendered canvas before placing it into
+    // the PDF margin box. This is the important part that makes the PDF
+    // Right/Left margin controls refer to the actual visible resume content
+    // instead of the hidden internal .resume-page padding.
+    const internalPadMm = 10;
+    const internalPadPx = Math.round((internalPadMm / 210) * canvas.width);
+    const croppedX = Math.max(0, Math.min(canvas.width - 1, internalPadPx));
+    const croppedWidth = Math.max(1, canvas.width - (internalPadPx * 2));
+    const contentCanvasBase = document.createElement('canvas');
+    contentCanvasBase.width = croppedWidth;
+    contentCanvasBase.height = trimmedCanvas.height;
+    const contentBaseCtx = contentCanvasBase.getContext('2d');
+    contentBaseCtx.fillStyle = '#ffffff';
+    contentBaseCtx.fillRect(0, 0, contentBaseCtx.canvas.width, contentBaseCtx.canvas.height);
+    contentBaseCtx.drawImage(
+        trimmedCanvas,
+        croppedX, 0, croppedWidth, trimmedCanvas.height,
+        0, 0, croppedWidth, trimmedCanvas.height
+    );
+
+    // Capture link rectangles before removing the clone. Coordinates are
+    // shifted by the cropped internal left padding.
+    const links = Array.from(clone.querySelectorAll('a[href]')).map(a => {
+        const r = a.getBoundingClientRect();
+        return {
+            href: a.href,
+            x: r.left - rect.left - (internalPadMm / 210) * rect.width,
+            y: r.top - rect.top,
+            w: r.width,
+            h: r.height
+        };
+    }).filter(l => l.href && l.w > 0 && l.h > 0);
+
+    // Capture section top positions before removing the clone. Custom page
+    // breaks are applied to these exact rendered Y coordinates, so they never
+    // alter text wrapping or the resume's internal layout.
+    const sectionBreaks = opts.breakMode === 'custom'
+        ? opts.breakSections.map(id => {
+            const el = clone.querySelector(`#${id}`);
+            if (!el) return null;
+            const r = el.getBoundingClientRect();
+            return { id, y: Math.max(0, r.top - rect.top) };
+        }).filter(Boolean)
+        : [];
+
+    // IMPORTANT: collect safe vertical cut positions from the real DOM.
+    // Raster slicing at an arbitrary pixel can cut straight through the last
+    // line of a bullet/paragraph. That is what caused the half-visible final
+    // line in the PDF. We prefer the nearest completed block/list-item bottom
+    // at or before the natural page boundary.
+    const safeBreaks = Array.from(clone.querySelectorAll(
+        'h1, h2, p, .item-header, .item-sub, li, .experience-item, .custom-resume-section'
+    )).map(el => {
+        const r = el.getBoundingClientRect();
+        return Math.round((r.bottom - rect.top) * renderScale);
+    }).filter(y => y > 8 && y < canvas.height - 8);
+
+    cloneHost.remove();
+
+    const pdf = new window.jspdf.jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: opts.page,
+        compress: true
+    });
+
+    // Convert native CSS pixels to mm. The image is then uniformly scaled;
+    // scale changes never cause reflow or font distortion.
+    const pxToMm = opts.pageW / rect.width;
+    const availableW = opts.pageW - opts.left - opts.right;
+    const availableH = opts.pageH - opts.top - opts.bottom;
+
+    // Scale is relative to the printable width. At 100%, the resume exactly
+    // fits between the left/right margins. Smaller values create more whitespace;
+    // margins therefore remain independently adjustable without changing wrapping.
+    const effectiveScale = opts.scale;
+
+    // Margins define the PDF content box. Scale is applied INSIDE that box,
+    // so changing the right margin always moves the right edge of the
+    // rendered resume exactly to (pageW - right margin). The content is
+    // anchored to the left margin instead of being re-centered.
+    const finalW = availableW * effectiveScale;
+    const xPos = opts.left;
+
+    // Slice the long canvas into printable page-height segments.
+    // If the requested scale is >100%, the content may extend beyond the page;
+    // keep the setting visible rather than silently changing the user's value.
+    const pagePxH = availableH / (pxToMm * effectiveScale);
+    const contentCanvas = contentCanvasBase;
+    const contentHeight = contentCanvas.height;
+    const pageCanvasHeight = Math.ceil(pagePxH * renderScale);
+
+    const pageCanvas = document.createElement('canvas');
+    pageCanvas.width = contentCanvas.width;
+    pageCanvas.height = pageCanvasHeight;
+    const pageCtx = pageCanvas.getContext('2d', { willReadFrequently: true });
+
+    function meaningfulRows(canvas, minDarkPixels = 12) {
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let first = canvas.height;
+        let last = -1;
+        for (let y = 0; y < canvas.height; y += 2) {
+            let dark = 0;
+            const row = y * canvas.width * 4;
+            for (let x = 0; x < canvas.width; x += 3) {
+                const i = row + x * 4;
+                if (data[i] < 235 || data[i + 1] < 235 || data[i + 2] < 235) {
+                    dark++;
+                    if (dark >= minDarkPixels) break;
+                }
+            }
+            if (dark >= minDarkPixels) {
+                if (first === canvas.height) first = y;
+                last = y;
+            }
+        }
+        return last >= first ? { first, last, height: last - first + 1 } : null;
+    }
+
+    // Find the last safe DOM boundary before a target pixel position. A small
+    // tolerance allows the browser's fractional-pixel layout to land cleanly.
+    function nearestSafeBreak(target, minimumProgress = 120) {
+        const candidates = safeBreaks
+            .filter(y => y > minimumProgress && y <= target + 2)
+            .sort((a, b) => b - a);
+        return candidates.length ? candidates[0] : target;
+    }
+
+    // Keep each page from cutting through a text line/list item. If no safe
+    // boundary exists in the current page, fall back to the exact page edge;
+    // this only happens when a single block itself is taller than a page.
+    function buildAutomaticSlices() {
+        const out = [];
+        let cursor = 0;
+        const finalMinContentPx = Math.max(18, Math.round(pageCanvasHeight * 0.018));
+
+        while (cursor < contentHeight - 1) {
+            const naturalEnd = Math.min(cursor + pageCanvasHeight, contentHeight);
+            let end = naturalEnd;
+
+            if (naturalEnd < contentHeight) {
+                const safe = nearestSafeBreak(naturalEnd, cursor + 120);
+                if (safe > cursor + 40) end = safe;
+            }
+
+            const sh = end - cursor;
+            if (sh <= 0) break;
+            out.push({ sy: cursor, sh });
+            cursor = end;
+        }
+
+        // A tiny final remainder caused by fractional CSS/raster rounding is
+        // discarded, but real content is never discarded.
+        if (out.length > 1) {
+            const last = out[out.length - 1];
+            if (last.sh < finalMinContentPx) out.pop();
+        }
+        return out;
+    }
+
+    function buildCustomSlices() {
+        const forced = [...new Set(sectionBreaks
+            .map(b => Math.max(0, Math.min(contentHeight, Math.round(b.y * renderScale)))))]
+            .filter(y => y > 8 && y < contentHeight - 8)
+            .sort((a, b) => a - b);
+
+        const out = [];
+        let cursor = 0;
+
+        for (const breakY of forced) {
+            // First fill normal pages until the selected section can be placed
+            // on a fresh page. Do not cut the preceding content mid-line.
+            while (breakY - cursor > pageCanvasHeight) {
+                const naturalEnd = Math.min(cursor + pageCanvasHeight, breakY);
+                const safe = nearestSafeBreak(naturalEnd, cursor + 120);
+                const end = safe > cursor + 40 ? safe : naturalEnd;
+                out.push({ sy: cursor, sh: end - cursor });
+                cursor = end;
+            }
+
+            if (breakY > cursor + 8) {
+                out.push({ sy: cursor, sh: breakY - cursor });
+                cursor = breakY;
+            }
+        }
+
+        while (cursor < contentHeight - 1) {
+            const naturalEnd = Math.min(cursor + pageCanvasHeight, contentHeight);
+            let end = naturalEnd;
+            if (naturalEnd < contentHeight) {
+                const safe = nearestSafeBreak(naturalEnd, cursor + 120);
+                if (safe > cursor + 40) end = safe;
+            }
+            out.push({ sy: cursor, sh: end - cursor });
+            cursor = end;
+        }
+        return out;
+    }
+
+    const slices = opts.breakMode === 'custom' && sectionBreaks.length
+        ? buildCustomSlices()
+        : buildAutomaticSlices();
+
+    slices.forEach(slice => {
+        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+        pageCtx.fillStyle = '#ffffff';
+        pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        pageCtx.drawImage(contentCanvas, 0, slice.sy, contentCanvas.width, slice.sh, 0, 0, contentCanvas.width, slice.sh);
+        slice.bounds = meaningfulRows(pageCtx.canvas);
+    });
+
+    // Never keep a genuinely empty/tiny final rendering remainder. Custom
+    // breaks are allowed to create a short page only when that page has real
+    // content.
+    if (slices.length > 1) {
+        const last = slices[slices.length - 1];
+        const finalMinContentPx = Math.max(18, Math.round(pageCanvasHeight * 0.018));
+        if ((!last.bounds || last.bounds.height < finalMinContentPx) && opts.breakMode !== 'custom') {
+            slices.pop();
+        }
+    }
+
+    slices.forEach((slice, page) => {
+        if (page > 0) pdf.addPage(opts.page);
+        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+        pageCtx.fillStyle = '#ffffff';
+        pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        pageCtx.drawImage(contentCanvas, 0, slice.sy, contentCanvas.width, slice.sh, 0, 0, contentCanvas.width, slice.sh);
+
+        const pageImgH = Math.min(availableH, (slice.sh / renderScale) * pxToMm * effectiveScale);
+
+        pdf.addImage(
+            pageCanvas.toDataURL('image/jpeg', 0.96),
+            'JPEG',
+            xPos,
+            opts.top,
+            finalW,
+            pageImgH,
+            undefined,
+            'FAST'
+        );
+
+        // Link annotations must use this slice's actual Y origin. Using
+        // page * pagePxH breaks as soon as a page is snapped to a safe DOM
+        // boundary, so calculate against slice.sy instead.
+        const sliceStartCss = slice.sy / renderScale;
+        const sliceEndCss = (slice.sy + slice.sh) / renderScale;
+        links.forEach(link => {
+            const linkY = link.y;
+            const linkBottom = link.y + link.h;
+            if (linkBottom <= sliceStartCss || linkY >= sliceEndCss) return;
+
+            const yWithin = Math.max(0, linkY - sliceStartCss);
+            const hWithin = Math.min(link.h, sliceEndCss - Math.max(linkY, sliceStartCss));
+            if (hWithin <= 0) return;
+
+            const xMm = xPos + link.x * pxToMm * effectiveScale;
+            const yMm = opts.top + yWithin * pxToMm * effectiveScale;
+            const wMm = Math.min(link.w * pxToMm * effectiveScale, Math.max(0, opts.pageW - opts.right - xMm));
+            const hMm = hWithin * pxToMm * effectiveScale;
+            if (wMm > 0 && hMm > 0) {
+                pdf.link(xMm, yMm, wMm, hMm, { url: link.href });
+            }
+        });
+    });
+
+    return pdf.output('blob');
+}
+
+async function renderPdfPreview() {
+    if (pdfState.rendering) return;
+    pdfState.rendering = true;
+    const status = document.getElementById('pdf-preview-status');
+    const downloadBtn = document.getElementById('pdf-download-final');
+    if (status) status.textContent = 'Rendering…';
+    if (downloadBtn) downloadBtn.disabled = true;
+
+    try {
+        const blob = await buildPdfBlob();
+        pdfState.blob = blob;
+        if (pdfState.url) URL.revokeObjectURL(pdfState.url);
+        pdfState.url = URL.createObjectURL(blob);
+        const frame = document.getElementById('pdf-preview');
+        if (frame) frame.src = pdfState.url;
+        if (status) status.textContent = 'Ready';
+        if (downloadBtn) downloadBtn.disabled = false;
+    } catch (err) {
+        console.error('PDF generation failed:', err);
+        if (status) status.textContent = err.message || 'Unable to render PDF';
+    } finally {
+        pdfState.rendering = false;
+    }
+}
+
+function downloadGeneratedPdf() {
+    if (!pdfState.blob) return;
+    const name = (currentData?.header?.name || 'resume').replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '') || 'resume';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(pdfState.blob);
+    a.download = `${name}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
 
 function updateFavicon(name) {

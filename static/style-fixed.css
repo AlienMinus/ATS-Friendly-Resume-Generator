@@ -419,3 +419,17 @@ a:hover {
     color: #001f5c !important;
     text-decoration: underline !important;
 }
+
+
+/* =========================================================
+   PDF DOWNLOAD MODAL
+   ========================================================= */
+#pdf-modal input[type="range"] {
+    accent-color: #2563eb;
+}
+
+#pdf-modal input:focus,
+#pdf-modal select:focus {
+    outline: 2px solid rgba(37, 99, 235, 0.25);
+    outline-offset: 1px;
+}

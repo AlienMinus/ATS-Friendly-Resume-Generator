@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resume Viewer & Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link id="dynamic-favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
     <link rel="stylesheet" href="static/style-fixed.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -122,8 +124,8 @@
                                 <label for="pdf-scale" class="font-semibold text-sm">Scale</label>
                                 <span id="pdf-scale-value" class="text-sm font-bold text-blue-600">100%</span>
                             </div>
-                            <input id="pdf-scale" type="range" min="70" max="100" step="1" value="100" class="w-full">
-                            <div class="flex justify-between text-[11px] text-gray-400"><span>70%</span><span>85%</span><span>100%</span></div>
+                            <input id="pdf-scale" type="range" min="50" max="200" step="1" value="100" class="w-full">
+                            <div class="flex justify-between text-[11px] text-gray-400"><span>50%</span><span>100%</span><span>150%</span><span>200%</span></div>
                         </div>
 
                         <div>
@@ -169,7 +171,7 @@
 
                         <div class="rounded-lg bg-gray-50 border p-3 text-xs text-gray-600 space-y-1">
                             <div class="font-semibold text-gray-800">Layout protection</div>
-                            <div>• Scale changes the final PDF size, not the text wrapping.</div>
+                            <div>• Scale adjusts font and spacing proportionally across fixed margins.</div>
                             <div>• Margins are applied around the rendered resume.</div>
                             <div>• Links are preserved as clickable PDF links.</div>
                         </div>

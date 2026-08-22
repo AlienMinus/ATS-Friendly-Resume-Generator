@@ -975,7 +975,7 @@ function getPdfOptions() {
     };
 }
 
-function trimCanvasBottom(sourceCanvas, threshold = 248, padding = 6) {
+function trimCanvasBottom(sourceCanvas, threshold = 248, padding = 12) {
     const width = sourceCanvas.width;
     const height = sourceCanvas.height;
     if (!width || !height) return sourceCanvas;
@@ -1028,16 +1028,20 @@ async function buildPdfBlob() {
     const source = document.querySelector('.resume-page');
     if (!source) throw new Error('Resume page not found.');
 
-    // Clone the resume at its native A4 layout width. We never resize the clone
-    // with CSS transform or change its font size, so line wrapping stays stable.
+    // Clone the resume at its native A4 layout width with proportional font scaling.
+    // Scaling adjusts typography and spacing across the full printable width
+    // while keeping margins and left/right padding constant.
     const cloneHost = document.createElement('div');
     cloneHost.style.cssText = `position:fixed;left:-100000px;top:0;width:210mm;background:#fff;z-index:-1;`;
     const clone = source.cloneNode(true);
-    clone.style.cssText = `width:210mm;max-width:210mm;min-height:0;height:auto;margin:0;padding:0 10mm;box-sizing:border-box;background:#fff;box-shadow:none;overflow:visible;`;
+    clone.style.cssText = `width:210mm;max-width:210mm;min-height:0;height:auto;margin:0;padding:0 10mm 15px 10mm;box-sizing:border-box;background:#fff;box-shadow:none;overflow:visible;font-size:${opts.scale * 100}%;`;
     cloneHost.appendChild(clone);
     document.body.appendChild(cloneHost);
 
-    // Wait for the browser to finish layout before rasterizing.
+    // Wait for fonts and browser layout to settle before rasterizing.
+    if (document.fonts?.ready) {
+        await document.fonts.ready;
+    }
     await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
     const rect = clone.getBoundingClientRect();
@@ -1053,16 +1057,12 @@ async function buildPdfBlob() {
         windowHeight: Math.ceil(rect.height)
     });
 
-    // Remove trailing blank canvas rows. html2canvas can include a tiny amount
-    // of extra height from CSS layout/rounding. Without trimming it, that tiny
-    // overflow can be interpreted as a complete third PDF page.
+    // Remove trailing blank canvas rows.
     const trimmedCanvas = trimCanvasBottom(canvas);
 
     // The resume print layout uses 10mm horizontal internal padding.
     // Crop that padding out of the rendered canvas before placing it into
-    // the PDF margin box. This is the important part that makes the PDF
-    // Right/Left margin controls refer to the actual visible resume content
-    // instead of the hidden internal .resume-page padding.
+    // the PDF margin box.
     const internalPadMm = 10;
     const internalPadPx = Math.round((internalPadMm / 210) * canvas.width);
     const croppedX = Math.max(0, Math.min(canvas.width - 1, internalPadPx));
@@ -1079,8 +1079,7 @@ async function buildPdfBlob() {
         0, 0, croppedWidth, trimmedCanvas.height
     );
 
-    // Capture link rectangles before removing the clone. Coordinates are
-    // shifted by the cropped internal left padding.
+    // Capture link rectangles before removing the clone.
     const links = Array.from(clone.querySelectorAll('a[href]')).map(a => {
         const r = a.getBoundingClientRect();
         return {
@@ -1092,29 +1091,25 @@ async function buildPdfBlob() {
         };
     }).filter(l => l.href && l.w > 0 && l.h > 0);
 
-    // Capture section top positions before removing the clone. Custom page
-    // breaks are applied to these exact rendered Y coordinates, so they never
-    // alter text wrapping or the resume's internal layout.
+    // Capture section top positions for custom break mode
     const sectionBreaks = opts.breakMode === 'custom'
         ? opts.breakSections.map(id => {
             const el = clone.querySelector(`#${id}`);
             if (!el) return null;
             const r = el.getBoundingClientRect();
-            return { id, y: Math.max(0, r.top - rect.top) };
+            return { id, y: Math.max(0, r.top - rect.top - 2) };
         }).filter(Boolean)
         : [];
 
-    // IMPORTANT: collect safe vertical cut positions from the real DOM.
-    // Raster slicing at an arbitrary pixel can cut straight through the last
-    // line of a bullet/paragraph. That is what caused the half-visible final
-    // line in the PDF. We prefer the nearest completed block/list-item bottom
-    // at or before the natural page boundary.
-    const safeBreaks = Array.from(clone.querySelectorAll(
-        'h1, h2, p, .item-header, .item-sub, li, .experience-item, .custom-resume-section'
-    )).map(el => {
+    // Collect candidate break positions from DOM elements.
+    const rawBreaks = [];
+    clone.querySelectorAll(
+        '#header-section, #summary-section, #education-section > div, #skills-section, .skills-grid, .experience-item, #experience-section > div, #projects-section > div, #certifications-section li, #achievements-section li, .custom-resume-section, .custom-resume-section li, .resume-page li'
+    ).forEach(el => {
         const r = el.getBoundingClientRect();
-        return Math.round((r.bottom - rect.top) * renderScale);
-    }).filter(y => y > 8 && y < canvas.height - 8);
+        const bottomY = Math.round((r.bottom - rect.top + 2) * renderScale);
+        if (bottomY > 8 && bottomY < trimmedCanvas.height - 8) rawBreaks.push(bottomY);
+    });
 
     cloneHost.remove();
 
@@ -1125,36 +1120,70 @@ async function buildPdfBlob() {
         compress: true
     });
 
-    // Convert native CSS pixels to mm. The image is then uniformly scaled;
-    // scale changes never cause reflow or font distortion.
-    const pxToMm = opts.pageW / rect.width;
+    // Available printable dimensions inside user margins
     const availableW = opts.pageW - opts.left - opts.right;
     const availableH = opts.pageH - opts.top - opts.bottom;
 
-    // Scale is relative to the printable width. At 100%, the resume exactly
-    // fits between the left/right margins. Smaller values create more whitespace;
-    // margins therefore remain independently adjustable without changing wrapping.
-    const effectiveScale = opts.scale;
+    // Millimeters per CSS pixel for 1:1 aspect ratio across the printable width
+    const contentPxToMm = availableW / (croppedWidth / renderScale);
 
-    // Margins define the PDF content box. Scale is applied INSIDE that box,
-    // so changing the right margin always moves the right edge of the
-    // rendered resume exactly to (pageW - right margin). The content is
-    // anchored to the left margin instead of being re-centered.
-    const finalW = availableW * effectiveScale;
+    // Resume spans the full printable width between margins
+    const finalW = availableW;
     const xPos = opts.left;
 
-    // Slice the long canvas into printable page-height segments.
-    // If the requested scale is >100%, the content may extend beyond the page;
-    // keep the setting visible rather than silently changing the user's value.
-    const pagePxH = availableH / (pxToMm * effectiveScale);
+    // Slice canvas into printable page-height segments
+    const pageCanvasHeight = Math.ceil((availableH / contentPxToMm) * renderScale);
     const contentCanvas = contentCanvasBase;
     const contentHeight = contentCanvas.height;
-    const pageCanvasHeight = Math.ceil(pagePxH * renderScale);
 
-    const pageCanvas = document.createElement('canvas');
-    pageCanvas.width = contentCanvas.width;
-    pageCanvas.height = pageCanvasHeight;
-    const pageCtx = pageCanvas.getContext('2d', { willReadFrequently: true });
+    // Direct pixel data inspection on rendered content canvas for clean whitespace detection
+    const contentCtx = contentCanvas.getContext('2d', { willReadFrequently: true });
+    const canvasPixels = contentCtx.getImageData(0, 0, contentCanvas.width, contentCanvas.height).data;
+    const canvasW = contentCanvas.width;
+
+    function isWhiteRow(y) {
+        if (y < 0 || y >= contentHeight) return true;
+        const rowStart = y * canvasW * 4;
+        for (let x = 0; x < canvasW; x += 3) {
+            const i = rowStart + x * 4;
+            if (canvasPixels[i] < 235 || canvasPixels[i + 1] < 235 || canvasPixels[i + 2] < 235) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Search backward or around targetY for a contiguous band of at least minBand whitespace rows.
+    // This ensures page breaks NEVER slice through characters or text baselines.
+    function findCleanBreakY(targetY, maxScan = 240, minBand = 3) {
+        const clampedTarget = Math.max(0, Math.min(contentHeight - 1, targetY));
+        let consecutiveWhite = 0;
+        let bandStart = -1;
+
+        for (let y = clampedTarget; y >= Math.max(0, clampedTarget - maxScan); y--) {
+            if (isWhiteRow(y)) {
+                consecutiveWhite++;
+                if (bandStart < 0) bandStart = y;
+                if (consecutiveWhite >= minBand) {
+                    return Math.round((bandStart + y) / 2);
+                }
+            } else {
+                consecutiveWhite = 0;
+                bandStart = -1;
+            }
+        }
+        return null;
+    }
+
+    // Snap each DOM safe-break candidate to a verified whitespace band in the canvas
+    const safeBreaks = [];
+    rawBreaks.forEach(rawY => {
+        const clean = findCleanBreakY(rawY + 10, 40) || findCleanBreakY(rawY, 30);
+        if (clean && clean > 10 && clean < contentHeight - 10) {
+            safeBreaks.push(clean);
+        }
+    });
+    safeBreaks.sort((a, b) => a - b);
 
     function meaningfulRows(canvas, minDarkPixels = 12) {
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -1179,31 +1208,37 @@ async function buildPdfBlob() {
         return last >= first ? { first, last, height: last - first + 1 } : null;
     }
 
-    // Find the last safe DOM boundary before a target pixel position. A small
-    // tolerance allows the browser's fractional-pixel layout to land cleanly.
-    function nearestSafeBreak(target, minimumProgress = 120) {
-        const candidates = safeBreaks
-            .filter(y => y > minimumProgress && y <= target + 2)
-            .sort((a, b) => b - a);
-        return candidates.length ? candidates[0] : target;
-    }
-
-    // Keep each page from cutting through a text line/list item. If no safe
-    // boundary exists in the current page, fall back to the exact page edge;
-    // this only happens when a single block itself is taller than a page.
+    // Keep each page from cutting through a text line or heading.
     function buildAutomaticSlices() {
         const out = [];
         let cursor = 0;
-        const finalMinContentPx = Math.max(18, Math.round(pageCanvasHeight * 0.018));
 
         while (cursor < contentHeight - 1) {
+            // If remaining content fits within small tolerance (6% of page), keep it on this page
+            if (contentHeight - cursor <= pageCanvasHeight * 1.06) {
+                out.push({ sy: cursor, sh: contentHeight - cursor });
+                break;
+            }
+
             const naturalEnd = Math.min(cursor + pageCanvasHeight, contentHeight);
             let end = naturalEnd;
 
             if (naturalEnd < contentHeight) {
-                const safe = nearestSafeBreak(naturalEnd, cursor + 120);
-                if (safe > cursor + 40) end = safe;
+                // Find candidates that fit on current page
+                const candidates = safeBreaks.filter(y => y > cursor + 120 && y <= naturalEnd);
+                if (candidates.length > 0) {
+                    end = candidates[candidates.length - 1];
+                } else {
+                    const cleanBand = findCleanBreakY(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
+                    if (cleanBand && cleanBand > cursor + 40) {
+                        end = cleanBand;
+                    }
+                }
             }
+
+            // Always ensure cut is on clean whitespace
+            const verifiedEnd = findCleanBreakY(end, 40) || end;
+            end = verifiedEnd;
 
             const sh = end - cursor;
             if (sh <= 0) break;
@@ -1211,18 +1246,15 @@ async function buildPdfBlob() {
             cursor = end;
         }
 
-        // A tiny final remainder caused by fractional CSS/raster rounding is
-        // discarded, but real content is never discarded.
-        if (out.length > 1) {
-            const last = out[out.length - 1];
-            if (last.sh < finalMinContentPx) out.pop();
-        }
         return out;
     }
 
     function buildCustomSlices() {
         const forced = [...new Set(sectionBreaks
-            .map(b => Math.max(0, Math.min(contentHeight, Math.round(b.y * renderScale)))))]
+            .map(b => {
+                const rawY = Math.round(b.y * renderScale);
+                return findCleanBreakY(rawY, 60) || rawY;
+            }))]
             .filter(y => y > 8 && y < contentHeight - 8)
             .sort((a, b) => a - b);
 
@@ -1230,14 +1262,24 @@ async function buildPdfBlob() {
         let cursor = 0;
 
         for (const breakY of forced) {
-            // First fill normal pages until the selected section can be placed
-            // on a fresh page. Do not cut the preceding content mid-line.
             while (breakY - cursor > pageCanvasHeight) {
+                if (breakY - cursor <= pageCanvasHeight * 1.06) {
+                    out.push({ sy: cursor, sh: breakY - cursor });
+                    cursor = breakY;
+                    break;
+                }
                 const naturalEnd = Math.min(cursor + pageCanvasHeight, breakY);
-                const safe = nearestSafeBreak(naturalEnd, cursor + 120);
-                const end = safe > cursor + 40 ? safe : naturalEnd;
-                out.push({ sy: cursor, sh: end - cursor });
-                cursor = end;
+                let end = naturalEnd;
+                const candidates = safeBreaks.filter(y => y > cursor + 120 && y <= naturalEnd);
+                if (candidates.length > 0) {
+                    end = candidates[candidates.length - 1];
+                } else {
+                    const cleanBand = findCleanBreakY(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
+                    if (cleanBand && cleanBand > cursor + 40) end = cleanBand;
+                }
+                const cleanCut = findCleanBreakY(end, 40) || end;
+                out.push({ sy: cursor, sh: cleanCut - cursor });
+                cursor = cleanCut;
             }
 
             if (breakY > cursor + 8) {
@@ -1247,14 +1289,24 @@ async function buildPdfBlob() {
         }
 
         while (cursor < contentHeight - 1) {
+            if (contentHeight - cursor <= pageCanvasHeight * 1.06) {
+                out.push({ sy: cursor, sh: contentHeight - cursor });
+                break;
+            }
             const naturalEnd = Math.min(cursor + pageCanvasHeight, contentHeight);
             let end = naturalEnd;
             if (naturalEnd < contentHeight) {
-                const safe = nearestSafeBreak(naturalEnd, cursor + 120);
-                if (safe > cursor + 40) end = safe;
+                const candidates = safeBreaks.filter(y => y > cursor + 120 && y <= naturalEnd);
+                if (candidates.length > 0) {
+                    end = candidates[candidates.length - 1];
+                } else {
+                    const cleanBand = findCleanBreakY(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
+                    if (cleanBand && cleanBand > cursor + 40) end = cleanBand;
+                }
             }
-            out.push({ sy: cursor, sh: end - cursor });
-            cursor = end;
+            const cleanCut = findCleanBreakY(end, 40) || end;
+            out.push({ sy: cursor, sh: cleanCut - cursor });
+            cursor = cleanCut;
         }
         return out;
     }
@@ -1264,35 +1316,39 @@ async function buildPdfBlob() {
         : buildAutomaticSlices();
 
     slices.forEach(slice => {
-        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageCtx.fillStyle = '#ffffff';
-        pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageCtx.drawImage(contentCanvas, 0, slice.sy, contentCanvas.width, slice.sh, 0, 0, contentCanvas.width, slice.sh);
-        slice.bounds = meaningfulRows(pageCtx.canvas);
+        const testCanvas = document.createElement('canvas');
+        testCanvas.width = contentCanvas.width;
+        testCanvas.height = Math.max(1, slice.sh);
+        const testCtx = testCanvas.getContext('2d', { willReadFrequently: true });
+        testCtx.fillStyle = '#ffffff';
+        testCtx.fillRect(0, 0, testCanvas.width, testCanvas.height);
+        testCtx.drawImage(contentCanvas, 0, slice.sy, contentCanvas.width, slice.sh, 0, 0, contentCanvas.width, slice.sh);
+        slice.bounds = meaningfulRows(testCanvas);
     });
 
-    // Never keep a genuinely empty/tiny final rendering remainder. Custom
-    // breaks are allowed to create a short page only when that page has real
-    // content.
     if (slices.length > 1) {
         const last = slices[slices.length - 1];
-        const finalMinContentPx = Math.max(18, Math.round(pageCanvasHeight * 0.018));
-        if ((!last.bounds || last.bounds.height < finalMinContentPx) && opts.breakMode !== 'custom') {
+        if (!last.bounds || last.bounds.height < 4) {
             slices.pop();
         }
     }
 
     slices.forEach((slice, page) => {
         if (page > 0) pdf.addPage(opts.page);
-        pageCtx.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageCtx.fillStyle = '#ffffff';
-        pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        pageCtx.drawImage(contentCanvas, 0, slice.sy, contentCanvas.width, slice.sh, 0, 0, contentCanvas.width, slice.sh);
 
-        const pageImgH = Math.min(availableH, (slice.sh / renderScale) * pxToMm * effectiveScale);
+        // Dynamically create a canvas sized exactly to slice.sh to ensure 1:1 aspect ratio
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = contentCanvas.width;
+        sliceCanvas.height = Math.max(1, slice.sh);
+        const sliceCtx = sliceCanvas.getContext('2d');
+        sliceCtx.fillStyle = '#ffffff';
+        sliceCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+        sliceCtx.drawImage(contentCanvas, 0, slice.sy, contentCanvas.width, slice.sh, 0, 0, contentCanvas.width, slice.sh);
+
+        const pageImgH = Math.min(availableH, (slice.sh / renderScale) * contentPxToMm);
 
         pdf.addImage(
-            pageCanvas.toDataURL('image/jpeg', 0.96),
+            sliceCanvas.toDataURL('image/jpeg', 0.98),
             'JPEG',
             xPos,
             opts.top,
@@ -1302,9 +1358,7 @@ async function buildPdfBlob() {
             'FAST'
         );
 
-        // Link annotations must use this slice's actual Y origin. Using
-        // page * pagePxH breaks as soon as a page is snapped to a safe DOM
-        // boundary, so calculate against slice.sy instead.
+        // Link annotations
         const sliceStartCss = slice.sy / renderScale;
         const sliceEndCss = (slice.sy + slice.sh) / renderScale;
         links.forEach(link => {
@@ -1316,10 +1370,10 @@ async function buildPdfBlob() {
             const hWithin = Math.min(link.h, sliceEndCss - Math.max(linkY, sliceStartCss));
             if (hWithin <= 0) return;
 
-            const xMm = xPos + link.x * pxToMm * effectiveScale;
-            const yMm = opts.top + yWithin * pxToMm * effectiveScale;
-            const wMm = Math.min(link.w * pxToMm * effectiveScale, Math.max(0, opts.pageW - opts.right - xMm));
-            const hMm = hWithin * pxToMm * effectiveScale;
+            const xMm = xPos + link.x * contentPxToMm;
+            const yMm = opts.top + yWithin * contentPxToMm;
+            const wMm = Math.min(link.w * contentPxToMm, Math.max(0, opts.pageW - opts.right - xMm));
+            const hMm = hWithin * contentPxToMm;
             if (wMm > 0 && hMm > 0) {
                 pdf.link(xMm, yMm, wMm, hMm, { url: link.href });
             }

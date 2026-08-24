@@ -1,7 +1,8 @@
 // List of available JSON files (In a real app, this would come from a backend API)
 const DATA_SOURCES = [
     'data/data.json',
-    'data/data2.json'
+    'data/data2.json',
+    'data/data3.json'
 ];
 
 let currentData = null; // Store current loaded data
@@ -1091,23 +1092,33 @@ async function buildPdfBlob() {
         };
     }).filter(l => l.href && l.w > 0 && l.h > 0);
 
-    // Capture section top positions for custom break mode
+    // Capture section boundaries for custom break mode (strictly between previous content bottom and h2 top)
     const sectionBreaks = opts.breakMode === 'custom'
         ? opts.breakSections.map(id => {
             const el = clone.querySelector(`#${id}`);
             if (!el) return null;
-            const r = el.getBoundingClientRect();
-            return { id, y: Math.max(0, r.top - rect.top - 2) };
+            const h2 = el.querySelector('h2') || el;
+            const h2Rect = h2.getBoundingClientRect();
+            let prev = el.previousElementSibling;
+            while (prev && (prev.offsetHeight === 0 || prev.clientHeight === 0)) {
+                prev = prev.previousElementSibling;
+            }
+            const prevBottom = prev ? prev.getBoundingClientRect().bottom : (h2Rect.top - 10);
+            return {
+                id,
+                prevBottomY: Math.max(0, prevBottom - rect.top),
+                h2TopY: Math.max(0, h2Rect.top - rect.top)
+            };
         }).filter(Boolean)
         : [];
 
-    // Collect candidate break positions from DOM elements.
+    // Collect candidate break positions from DOM elements (entire entries kept together).
     const rawBreaks = [];
     clone.querySelectorAll(
-        '#header-section, #summary-section, #education-section > div, #skills-section, .skills-grid, .experience-item, #experience-section > div, #projects-section > div, #certifications-section li, #achievements-section li, .custom-resume-section, .custom-resume-section li, .resume-page li'
+        '#header-section, #summary-section, #education-section > div, #skills-section, .skills-grid, .experience-item, #projects-section > div, #certifications-section li, #achievements-section li, .custom-resume-section > div, .custom-resume-section'
     ).forEach(el => {
         const r = el.getBoundingClientRect();
-        const bottomY = Math.round((r.bottom - rect.top + 2) * renderScale);
+        const bottomY = Math.round((r.bottom - rect.top) * renderScale);
         if (bottomY > 8 && bottomY < trimmedCanvas.height - 8) rawBreaks.push(bottomY);
     });
 
@@ -1153,14 +1164,13 @@ async function buildPdfBlob() {
         return true;
     }
 
-    // Search backward or around targetY for a contiguous band of at least minBand whitespace rows.
-    // This ensures page breaks NEVER slice through characters or text baselines.
-    function findCleanBreakY(targetY, maxScan = 240, minBand = 3) {
-        const clampedTarget = Math.max(0, Math.min(contentHeight - 1, targetY));
+    // Search forward from startY into the bottom margin of an element for whitespace
+    function findWhitespaceGapAfter(startY, maxScan = 40, minBand = 2) {
+        const clampedStart = Math.max(0, Math.min(contentHeight - 1, startY));
         let consecutiveWhite = 0;
         let bandStart = -1;
 
-        for (let y = clampedTarget; y >= Math.max(0, clampedTarget - maxScan); y--) {
+        for (let y = clampedStart; y <= Math.min(contentHeight - 1, clampedStart + maxScan); y++) {
             if (isWhiteRow(y)) {
                 consecutiveWhite++;
                 if (bandStart < 0) bandStart = y;
@@ -1175,10 +1185,31 @@ async function buildPdfBlob() {
         return null;
     }
 
-    // Snap each DOM safe-break candidate to a verified whitespace band in the canvas
+    // Search backward from startY (for natural page limits) for whitespace
+    function findWhitespaceGapBefore(startY, maxScan = 240, minBand = 2) {
+        const clampedStart = Math.max(0, Math.min(contentHeight - 1, startY));
+        let consecutiveWhite = 0;
+        let bandStart = -1;
+
+        for (let y = clampedStart; y >= Math.max(0, clampedStart - maxScan); y--) {
+            if (isWhiteRow(y)) {
+                consecutiveWhite++;
+                if (bandStart < 0) bandStart = y;
+                if (consecutiveWhite >= minBand) {
+                    return Math.round((bandStart + y) / 2);
+                }
+            } else {
+                consecutiveWhite = 0;
+                bandStart = -1;
+            }
+        }
+        return null;
+    }
+
+    // Snap each DOM safe-break candidate forward into the whitespace margin after the item
     const safeBreaks = [];
     rawBreaks.forEach(rawY => {
-        const clean = findCleanBreakY(rawY + 10, 40) || findCleanBreakY(rawY, 30);
+        const clean = findWhitespaceGapAfter(rawY, 35) || rawY;
         if (clean && clean > 10 && clean < contentHeight - 10) {
             safeBreaks.push(clean);
         }
@@ -1229,7 +1260,7 @@ async function buildPdfBlob() {
                 if (candidates.length > 0) {
                     end = candidates[candidates.length - 1];
                 } else {
-                    const cleanBand = findCleanBreakY(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
+                    const cleanBand = findWhitespaceGapBefore(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
                     if (cleanBand && cleanBand > cursor + 40) {
                         end = cleanBand;
                     }
@@ -1237,7 +1268,8 @@ async function buildPdfBlob() {
             }
 
             // Always ensure cut is on clean whitespace
-            const verifiedEnd = findCleanBreakY(end, 40) || end;
+            const verifiedEnd = findWhitespaceGapAfter(end, 20) || findWhitespaceGapBefore(end, 20) || end;
+            if (verifiedEnd <= cursor) break;
             end = verifiedEnd;
 
             const sh = end - cursor;
@@ -1252,8 +1284,12 @@ async function buildPdfBlob() {
     function buildCustomSlices() {
         const forced = [...new Set(sectionBreaks
             .map(b => {
-                const rawY = Math.round(b.y * renderScale);
-                return findCleanBreakY(rawY, 60) || rawY;
+                const prevBottomCanvas = Math.round(b.prevBottomY * renderScale);
+                const h2TopCanvas = Math.round(b.h2TopY * renderScale);
+                const gap = Math.max(1, h2TopCanvas - prevBottomCanvas);
+                // Look for a clean whitespace band strictly in the gap between previous section bottom and h2 top
+                const clean = findWhitespaceGapAfter(prevBottomCanvas, gap + 25) || Math.round((prevBottomCanvas + h2TopCanvas) / 2);
+                return clean;
             }))]
             .filter(y => y > 8 && y < contentHeight - 8)
             .sort((a, b) => a - b);
@@ -1274,10 +1310,11 @@ async function buildPdfBlob() {
                 if (candidates.length > 0) {
                     end = candidates[candidates.length - 1];
                 } else {
-                    const cleanBand = findCleanBreakY(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
+                    const cleanBand = findWhitespaceGapBefore(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
                     if (cleanBand && cleanBand > cursor + 40) end = cleanBand;
                 }
-                const cleanCut = findCleanBreakY(end, 40) || end;
+                const cleanCut = findWhitespaceGapAfter(end, 20) || findWhitespaceGapBefore(end, 20) || end;
+                if (cleanCut <= cursor) break;
                 out.push({ sy: cursor, sh: cleanCut - cursor });
                 cursor = cleanCut;
             }
@@ -1300,11 +1337,12 @@ async function buildPdfBlob() {
                 if (candidates.length > 0) {
                     end = candidates[candidates.length - 1];
                 } else {
-                    const cleanBand = findCleanBreakY(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
+                    const cleanBand = findWhitespaceGapBefore(naturalEnd - 2, Math.min(320, pageCanvasHeight - 120));
                     if (cleanBand && cleanBand > cursor + 40) end = cleanBand;
                 }
             }
-            const cleanCut = findCleanBreakY(end, 40) || end;
+            const cleanCut = findWhitespaceGapAfter(end, 20) || findWhitespaceGapBefore(end, 20) || end;
+            if (cleanCut <= cursor) break;
             out.push({ sy: cursor, sh: cleanCut - cursor });
             cursor = cleanCut;
         }

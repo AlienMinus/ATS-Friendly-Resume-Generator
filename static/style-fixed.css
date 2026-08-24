@@ -305,12 +305,22 @@ h2 {
 
 .item-header {
     display: flex;
-
     justify-content: space-between;
-
+    align-items: baseline;
+    gap: 12px;
     font-weight: 700;
-
     font-size: 0.9em;
+}
+
+.item-header > span:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.item-header > span:last-child {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    text-align: right;
 }
 
 
@@ -320,14 +330,23 @@ h2 {
 
 .item-sub {
     display: flex;
-
     justify-content: space-between;
-
+    align-items: baseline;
+    gap: 12px;
     font-style: italic;
-
     font-size: 0.8em;
-
     margin-bottom: 2px;
+}
+
+.item-sub > span:first-child {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.item-sub > span:last-child {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    text-align: right;
 }
 
 

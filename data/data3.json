@@ -1,0 +1,207 @@
+{
+    "header": {
+        "name": "Manas Ranjan Das",
+        "location": "Cuttack, Odisha, India",
+        "contact": [
+            {
+                "text": "Phone: +91-82497-09981",
+                "link": null
+            },
+            {
+                "text": "Email: dasmanasranjan2005@gmail.com",
+                "link": "mailto:dasmanasranjan2005@gmail.com"
+            },
+            {
+                "text": "LinkedIn: linkedin.com/in/manas-r-das",
+                "link": "https://linkedin.com/in/manas-r-das"
+            },
+            {
+                "text": "GitHub: github.com/AlienMinus",
+                "link": "https://github.com/AlienMinus"
+            },
+            {
+                "text": "Portfolio: manas-ranjan-das.vercel.app",
+                "link": "https://manas-ranjan-das.vercel.app"
+            }
+        ]
+    },
+    "summary": "Electrical & Computer Engineering student with 3+ years of hands-on experience in <strong>AI/ML, Computer Vision, NLP and Full-Stack AI</strong> systems. Built 3+ AI/ML applications, including predictive analytics, YOLO-based vision systems and ML browser extensions. Experienced with <strong>Python, TensorFlow, Scikit-learn, OpenCV, NLP, MongoDB and Agentic AI</strong>, with a focus on deployable and scalable solutions.",
+    "education": [
+        {
+            "institution": "Biju Patnaik University of Technology, Rourkela",
+            "period": "2023 — 2027",
+            "degree": "Bachelor of Technology in Electrical & Computer Engineering",
+            "score": "CGPA: 8.88 / 10.00"
+        },
+        {
+            "institution": "Jatiya Kabi Bira Kishore Das Govt. HSS",
+            "period": "2021 — 2023",
+            "degree": "Higher Secondary Science (CHSE Odisha)",
+            "score": "87.5%"
+        },
+        {
+            "institution": "Saraswati Shishu Vidya Mandir, Sharada Nagar",
+            "period": "2019 — 2021",
+            "degree": "High School (BSE, Odisha)",
+            "score": "86.33%"
+        }
+    ],
+    "skills": [
+        {
+            "category": "Programming",
+            "items": "Python, C, C++, JavaScript, SQL"
+        },
+        {
+            "category": "Machine Learning",
+            "items": "Scikit-learn, XGBoost, Random Forest, Regression, Predictive Analytics, SHAP, RAG"
+        },
+        {
+            "category": "Deep Learning",
+            "items": "TensorFlow, YOLO, Computer Vision, OpenCV, Mediapipe"
+        },
+        {
+            "category": "AI/NLP",
+            "items": "NLP, LangChain, Agentic AI, OCR, AI Applications, Hugging Face, Transformer Pipelines"
+        },
+        {
+            "category": "Data",
+            "items": "Pandas, NumPy, Power BI, Streamlit, Matplotlib, Seaborn"
+        },
+        {
+            "category": "Databases",
+            "items": "MongoDB, Oracle DB AI, SQLite"
+        },
+        {
+            "category": "Web/Deployment",
+            "items": "React, Node.js, Express.js, Flask, Docker"
+        },
+        {
+            "category": "Tools",
+            "items": "Git, GitHub, Linux, Antigravity, Codex, GitHub-Copilot, Blackbox"
+        },
+        {
+            "category": "Soft Skills",
+            "items": "Leadership, Communication, Team Management, Prompt Engineering"
+        }
+    ],
+    "experience": [
+        {
+            "role": "AI Engineering Intern | Odisha Computer Application Centre (OCAC) | ",
+            "link": "https://media.licdn.com/dms/image/v2/D4D2DAQH8tTwrH4oh-Q/profile-treasury-image-shrink_800_800/B4DZ_qwX_eI4AI-/0/1786349977942?e=1787583600&v=beta&t=Y8ZYzQknil5qYoc10dosKZZFxSurN5qTwdOC6a0ffFM",
+            "period": "May 2025 — July 2025",
+            "details": [
+                "Developed 3+ AI/ML applications spanning computer vision, predictive analytics and browser-based ML.",
+                "Built a YOLO-based PCB component detector and 2+ OpenCV/MediaPipe gesture applications.",
+                "Developed a retail forecasting pipeline using 3+ ML models with an interactive Streamlit dashboard.",
+                "Built 2 ML-powered browser extensions for email-spam filtering and text-based emotion detection."
+            ]
+        },
+        {
+            "role": "Cybersecurity Intern | Central Tool Room & Training Centre (CTTC) | ",
+            "link": "https://www.linkedin.com/in/manas-r-das/overlay/Position/2916363798/treasury/?profileId=ACoAAE6WIKkBxKxNjeh3J4sAUoQ2CMc4MklVsaQ",
+            "period": "May 2026 – Jun 2026",
+            "details": [
+                "Completed hands-on training across 5+ cybersecurity domains, including network security and ethical hacking.",
+                "Performed reconnaissance, vulnerability scanning and security analysis using Kali Linux.",
+                "Simulated 4+ network-security mechanisms, including VPN, Port Security, Firewall and IDS/IPS."
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "title": "Hyperion IDE — Code Security Analysis & Development Environment | ONGOING | ",
+            "link": "https://hyperion-ide.vercel.app/",
+            "tech": "React.js, Node.js, Express.js, MongoDB, Python NLP, Microservices, Agentic AI",
+            "year": "2026",
+            "details": [
+                "Developing an AI-assisted IDE integrating 5+ technology layers for intelligent code analysis.",
+                "Designed a microservices architecture combining MERN + Python NLP + Agentic AI.",
+                "Developing automated source-code vulnerability detection and intelligent developer workflows."
+            ]
+        },
+        {
+            "title": "AI Interview Assistant — AI-Powered Interview Simulation Browser Extension | ",
+            "link": "https://github.com/AlienMinus/AI_INTERVIEW_ASSISTANT",
+            "tech": "JavaScript, Node.js, YOLO, Flask-Python-OpenCV, OCR, Browser Extension",
+            "year": "2026",
+            "details": [
+                "Integrated 4+ AI/CV technologies for automated interview assistance.",
+                "Implemented resume extraction and job-description processing for personalized interview contexts.",
+                "Built a 100-point interview scoring system with historical performance tracking and trend visualization."
+            ]
+        },
+        {
+            "title": "M.I.R.A — Multipurpose Intelligence for Research & Automation | ONGOING | ",
+            "link": "https://m-i-r-a.vercel.app/",
+            "tech": "MERN, LangChain, Agentic AI, NLP",
+            "year": "2026",
+            "details": [
+                "Developing an AI research assistant integrating 4 core technology layers.",
+                "Built task-oriented workflows for automated research and intelligent information processing.",
+                "Designing a scalable full-stack architecture with dedicated AI/NLP components."
+            ]
+        },
+        {
+            "title": "SAGAR2027 — International Conference Website & its Chat Assistant | ",
+            "link": "https://www.sagar2027.com/",
+            "tech": "React, JavaScript, RAG, NLP, JSON, Vercel",
+            "year": "2026",
+            "details": [
+                "Developed and deployed a responsive conference platform for the 1st International Conference on Soft Computing Applications in Smart Grid & Renewable Energy.",
+                "Built a RAG-based chatbot to provide context-aware answers from 13+ structured conference data sources.",
+                "Integrated 13+ knowledge sources, covering schedules, registration, papers, venue, speakers, awards, accommodation and conference information.",
+                "Implemented text + voice interaction, Markdown responses, contextual links and structured UI components.",
+                "Deployed the production website with an integrated AI assistant for automated conference information retrieval."
+            ]
+        },
+        {
+            "title": "Retail Sales Forecasting & Analytics | ",
+            "link": "https://retail-sales-forecast.streamlit.app/",
+            "tech": "Python, Scikit-learn, XGBoost, Random Forest, Pandas, Streamlit, SHAP",
+            "year": "2025",
+            "details": [
+                "Built an ML pipeline for historical sales analysis and future demand prediction.",
+                "Compared 3+ regression models: Linear Regression, Random Forest [97% Accuracy] and XGBoost [~94% Accuracy].",
+                "Integrated SHAP explainability and a Streamlit dashboard for interactive model analysis."
+            ]
+        },
+        {
+            "title": "AI/Computer Vision Applications | ",
+            "link": "https://pcb-detection-v4.streamlit.app/",
+            "tech": "YOLO, OpenCV, MediaPipe, Python",
+            "year": "2025",
+            "details": [
+                "Developed a YOLO-based system for PCB component detection.",
+                "Built 2+ gesture-controlled applications, including a writing pad and on-screen keyboard.",
+                "Applied computer vision pipelines for real-time object and gesture recognition."
+            ]
+        }
+    ],
+    "certifications": [],
+    "achievements": [
+        {
+            "label": "BPUT Tech Carnival 2025",
+            "description": "tate-Level Silver Medal — Math Olympiad; Bronze Medal — Technical Quiz."
+        },
+        {
+            "label": "NIUS 2024 Scholar",
+            "description": "Selected among 71 students nationwide for NIUS Physics Program, HBCSE-TIFR."
+        },
+        {
+            "label": "Research Publication",
+            "description": "Co-authored research on optimizing fuzzy power system stabilizers."
+        },
+        {
+            "label": "ISTE Member",
+            "description": "Indian Society of Technical Education, 2024–2028."
+        }
+    ],
+    "customSections": [
+        {
+            "title": "CORE AI/ML AREAS",
+            "items": [
+                "Python | Machine Learning | Deep Learning | Computer Vision | NLP | Predictive Analytics | TensorFlow | Scikit-learn | YOLO | OpenCV | XGBoost | SHAP | Agentic AI | LangChain | MongoDB | SQL | RAG"
+            ]
+        }
+    ]
+}

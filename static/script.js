@@ -17,6 +17,12 @@ function setupEventListeners() {
     document.getElementById('print-btn')?.addEventListener('click', openPdfModal);
     setupPdfModal();
 
+    // Passport Photo
+    document.getElementById('photo-toggle-checkbox')?.addEventListener('change', (e) => {
+        togglePhotoOption(e.target.checked);
+    });
+    document.getElementById('resume-photo-input')?.addEventListener('change', handlePhotoFileSelected);
+
     // Navigation
     document.getElementById('btn-show-resume')?.addEventListener('click', () => switchView('resume'));
     document.getElementById('btn-show-admin')?.addEventListener('click', () => {
@@ -203,24 +209,163 @@ function renderResume(data) {
 
 function renderHeader(data) {
     const container = document.getElementById('header-section');
+    if (!container) return;
     const contact = Array.isArray(data.contact) ? data.contact : [];
 
-    const contactHtml = contact.map((item, index) => {
-        let html = item.link
-            ? `<a href="${item.link}">${item.text || ''}</a>`
-            : `<span>${item.text || ''}</span>`;
+    const showPhoto = data.showPhoto !== undefined ? Boolean(data.showPhoto) : Boolean(data.photo);
 
-        if (index < contact.length - 1) html += `<span>|</span>`;
-        return html;
-    }).join('\n');
+    if (showPhoto) {
+        container.className = 'header-with-photo mb-3';
+        const photoHtml = data.photo
+            ? `
+                <div class="passport-photo-wrapper">
+                    <div class="passport-photo-box group">
+                        <img src="${data.photo}" alt="${data.name || 'Passport Photo'}" class="passport-photo-img">
+                        <div class="passport-photo-overlay no-print">
+                            <button type="button" id="btn-change-photo" class="text-white bg-blue-600 hover:bg-blue-700 p-1.5 rounded-full text-xs shadow transition" title="Change Photo">
+                                <i class="fa-solid fa-camera"></i>
+                            </button>
+                            <button type="button" id="btn-remove-photo" class="text-white bg-red-600 hover:bg-red-700 p-1.5 rounded-full text-xs shadow transition" title="Remove Photo">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `
+            : `
+                <div class="passport-photo-wrapper no-print">
+                    <div id="btn-upload-placeholder" class="passport-photo-placeholder" title="Click to upload passport size photo">
+                        <i class="fa-solid fa-plus text-2xl mb-1 text-blue-500"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Add Photo</span>
+                    </div>
+                </div>
+            `;
 
-    container.innerHTML = `
-        <h1 class="text-3xl font-bold uppercase">${data.name || ''}</h1>
-        <div class="text-[0.82rem] flex justify-center flex-wrap gap-x-3 font-medium">
-            ${contactHtml}
-        </div>
-        <div class="text-[0.82rem] italic mt-0.5 text-gray-700">${data.location || ''}</div>
-    `;
+        const stackedLinksHtml = contact.map(item => {
+            return item.link
+                ? `<a href="${item.link}" class="hover:underline text-gray-900">${item.text || ''}</a>`
+                : `<span>${item.text || ''}</span>`;
+        }).join('\n');
+
+        container.innerHTML = `
+            <div class="header-text-col">
+                <h1 class="text-3xl font-bold uppercase text-left">${data.name || ''}</h1>
+                <div class="text-[0.82rem] flex flex-col gap-0.5 font-medium justify-start text-left mt-1">
+                    ${stackedLinksHtml}
+                </div>
+                <div class="text-[0.82rem] italic mt-1 text-gray-700 text-left">${data.location || ''}</div>
+            </div>
+            ${photoHtml}
+        `;
+
+        document.getElementById('btn-upload-placeholder')?.addEventListener('click', triggerPhotoUpload);
+        document.getElementById('btn-change-photo')?.addEventListener('click', triggerPhotoUpload);
+        document.getElementById('btn-remove-photo')?.addEventListener('click', removePhoto);
+    } else {
+        const centeredContactHtml = contact.map((item, index) => {
+            let html = item.link
+                ? `<a href="${item.link}">${item.text || ''}</a>`
+                : `<span>${item.text || ''}</span>`;
+
+            if (index < contact.length - 1) html += `<span class="mx-1 text-gray-400">|</span>`;
+            return html;
+        }).join('\n');
+
+        container.className = 'text-center mb-3';
+        container.innerHTML = `
+            <h1 class="text-3xl font-bold uppercase">${data.name || ''}</h1>
+            <div class="text-[0.82rem] flex justify-center flex-wrap gap-x-3 font-medium">
+                ${centeredContactHtml}
+            </div>
+            <div class="text-[0.82rem] italic mt-0.5 text-gray-700">${data.location || ''}</div>
+        `;
+    }
+
+    const photoToggleCheckbox = document.getElementById('photo-toggle-checkbox');
+    if (photoToggleCheckbox) {
+        photoToggleCheckbox.checked = showPhoto;
+    }
+}
+
+function triggerPhotoUpload() {
+    const input = document.getElementById('resume-photo-input');
+    if (input) {
+        input.value = '';
+        input.click();
+    }
+}
+
+function handlePhotoFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('Please select a valid image file.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const base64 = event.target.result;
+        if (!currentData) currentData = {};
+        if (!currentData.header) currentData.header = {};
+        currentData.header.photo = base64;
+        currentData.header.showPhoto = true;
+
+        if (currentData._source === 'local') {
+            saveLocalProfile(currentData);
+        }
+
+        renderHeader(currentData.header);
+        
+        // Refresh admin form if currently in admin view
+        const adminView = document.getElementById('admin-view');
+        if (adminView && !adminView.classList.contains('hidden')) {
+            buildAdminForm(currentData);
+        }
+
+        showToast('Passport photo updated successfully!');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removePhoto(e) {
+    e?.stopPropagation();
+    if (!currentData?.header) return;
+    currentData.header.photo = '';
+    currentData.header.showPhoto = true;
+
+    if (currentData._source === 'local') {
+        saveLocalProfile(currentData);
+    }
+
+    renderHeader(currentData.header);
+
+    const adminView = document.getElementById('admin-view');
+    if (adminView && !adminView.classList.contains('hidden')) {
+        buildAdminForm(currentData);
+    }
+
+    showToast('Photo removed. Placeholder active.');
+}
+
+function togglePhotoOption(enabled) {
+    if (!currentData) currentData = {};
+    if (!currentData.header) currentData.header = {};
+    currentData.header.showPhoto = enabled;
+
+    if (currentData._source === 'local') {
+        saveLocalProfile(currentData);
+    }
+
+    renderHeader(currentData.header);
+
+    const adminView = document.getElementById('admin-view');
+    if (adminView && !adminView.classList.contains('hidden')) {
+        buildAdminForm(currentData);
+    }
+
+    showToast(enabled ? 'Passport photo enabled.' : 'Passport photo removed from header.');
 }
 
 function renderSummary(data) {
@@ -383,6 +528,60 @@ function buildAdminForm(data) {
     const headerSet = createFieldset('header-group');
     headerSet.appendChild(createInput('Full Name', data.header?.name || '', 'header-name'));
     headerSet.appendChild(createInput('Location', data.header?.location || '', 'header-location'));
+
+    // Passport Photo controls in Admin Form
+    const photoAdminDiv = document.createElement('div');
+    photoAdminDiv.className = 'mt-4 pt-3 border-t border-gray-200';
+    photoAdminDiv.id = 'admin-photo-section';
+    const showPhotoChecked = data.header?.showPhoto !== undefined
+        ? Boolean(data.header.showPhoto)
+        : Boolean(data.header?.photo);
+
+    photoAdminDiv.innerHTML = `
+        <label class="flex items-center gap-2 cursor-pointer mb-3 select-none">
+            <input type="checkbox" name="header-show-photo" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500" ${showPhotoChecked ? 'checked' : ''}>
+            <span class="text-sm font-bold text-gray-700">Include Passport Photo on Resume</span>
+        </label>
+        <div id="admin-photo-preview" class="flex items-center gap-4 ${showPhotoChecked ? '' : 'hidden'}">
+            ${data.header?.photo
+                ? `
+                    <div class="w-16 h-20 border rounded overflow-hidden shadow-sm bg-white flex-shrink-0">
+                        <img src="${data.header.photo}" alt="Preview" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" id="admin-btn-change-photo" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 shadow-sm transition">
+                            <i class="fa-solid fa-camera mr-1"></i> Change Photo
+                        </button>
+                        <button type="button" id="admin-btn-remove-photo" class="px-3 py-1.5 bg-red-600 text-white rounded text-xs font-semibold hover:bg-red-700 shadow-sm transition">
+                            <i class="fa-solid fa-trash mr-1"></i> Remove Photo
+                        </button>
+                    </div>
+                `
+                : `
+                    <div class="w-16 h-20 border-2 border-dashed border-gray-300 rounded flex flex-col items-center justify-center bg-gray-50 text-gray-400 flex-shrink-0">
+                        <i class="fa-solid fa-image text-xl"></i>
+                    </div>
+                    <button type="button" id="admin-btn-upload-photo" class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-semibold hover:bg-blue-700 shadow-sm transition">
+                        <i class="fa-solid fa-upload mr-1"></i> Upload Photo
+                    </button>
+                `
+            }
+        </div>
+    `;
+
+    headerSet.appendChild(photoAdminDiv);
+
+    // Attach listeners for admin photo controls
+    const adminShowPhotoCb = photoAdminDiv.querySelector('input[name="header-show-photo"]');
+    const adminPhotoPreview = photoAdminDiv.querySelector('#admin-photo-preview');
+    adminShowPhotoCb?.addEventListener('change', (e) => {
+        adminPhotoPreview?.classList.toggle('hidden', !e.target.checked);
+        togglePhotoOption(e.target.checked);
+    });
+
+    photoAdminDiv.querySelector('#admin-btn-upload-photo')?.addEventListener('click', triggerPhotoUpload);
+    photoAdminDiv.querySelector('#admin-btn-change-photo')?.addEventListener('click', triggerPhotoUpload);
+    photoAdminDiv.querySelector('#admin-btn-remove-photo')?.addEventListener('click', removePhoto);
 
     const contactContainer = document.createElement('div');
     contactContainer.className = 'mt-4';
@@ -676,7 +875,7 @@ function handleNewProfile() {
     const emptyData = {
         id: Date.now().toString(), // Generate ID immediately
         _source: 'local',
-        header: { name: "New Profile", location: "", contact: [] },
+        header: { name: "New Profile", location: "", showPhoto: false, photo: "", contact: [] },
         summary: "",
         education: [],
         experience: [],
@@ -803,6 +1002,8 @@ function getFormDataFromDOM() {
         header: {
             name: document.querySelector('input[name="header-name"]')?.value || '',
             location: document.querySelector('input[name="header-location"]')?.value || '',
+            showPhoto: document.querySelector('input[name="header-show-photo"]')?.checked ?? (currentData?.header?.showPhoto !== undefined ? Boolean(currentData.header.showPhoto) : Boolean(currentData?.header?.photo)),
+            photo: currentData?.header?.photo || '',
             contact: getList(document.getElementById('contact-list'), '.contact-item', el => ({
                 text: el.querySelectorAll('input')[0]?.value || '',
                 link: el.querySelectorAll('input')[1]?.value || null
@@ -1036,10 +1237,23 @@ async function buildPdfBlob() {
     cloneHost.style.cssText = `position:fixed;left:-100000px;top:0;width:210mm;background:#fff;z-index:-1;`;
     const clone = source.cloneNode(true);
     clone.style.cssText = `width:210mm;max-width:210mm;min-height:0;height:auto;margin:0;padding:0 10mm 15px 10mm;box-sizing:border-box;background:#fff;box-shadow:none;overflow:visible;font-size:${opts.scale * 100}%;`;
+    
+    // Remove all .no-print elements (like upload placeholders, overlays) from the PDF export clone
+    clone.querySelectorAll('.no-print').forEach(el => el.remove());
+
     cloneHost.appendChild(clone);
     document.body.appendChild(cloneHost);
 
-    // Wait for fonts and browser layout to settle before rasterizing.
+    // Wait for fonts, images, and browser layout to settle before rasterizing.
+    const images = Array.from(clone.querySelectorAll('img'));
+    await Promise.all(images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+        });
+    }));
+
     if (document.fonts?.ready) {
         await document.fonts.ready;
     }

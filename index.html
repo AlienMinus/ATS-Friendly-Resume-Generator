@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link id="dynamic-favicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
-    <link rel="stylesheet" href="static/style-fixed.css?v=2.3">
+    <link rel="stylesheet" href="static/style-fixed.css?v=2.6">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- FontAwesome for Icons -->
@@ -56,11 +56,20 @@
         
         <!-- RESUME VIEW -->
         <div id="resume-view" class="min-h-full p-4 md:p-8 flex flex-col items-center pt-16 lg:pt-8">
-            <div class="no-print w-full max-w-[210mm] flex justify-end mb-4">
+            <div class="no-print w-full max-w-[210mm] flex justify-between items-center mb-4">
+                <div class="flex items-center gap-3">
+                    <label id="photo-toggle-label" class="inline-flex items-center gap-2 cursor-pointer select-none text-sm font-medium text-gray-700 bg-white px-3 py-2 rounded shadow hover:bg-gray-50 border transition">
+                        <input id="photo-toggle-checkbox" type="checkbox" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer">
+                        <span><i class="fa-solid fa-image mr-1 text-gray-500"></i> Passport Photo</span>
+                    </label>
+                </div>
                 <button id="print-btn" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition text-sm font-bold">
                     <i class="fa-solid fa-download mr-2"></i> Download PDF
                 </button>
             </div>
+
+            <!-- Hidden file input for photo upload -->
+            <input type="file" id="resume-photo-input" accept="image/*" class="hidden">
 
             <!-- The Resume Page Container -->
             <div class="resume-page">
@@ -213,6 +222,6 @@
     <!-- Toast Container -->
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <script src="static/script.js?v=2.3"></script>
+    <script src="static/script.js?v=2.6"></script>
 </body>
 </html>
